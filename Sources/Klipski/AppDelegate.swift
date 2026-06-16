@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let clipboard: ClipboardManager
     private var hotKey: HotKeyManager!
     private var settingsController: SettingsWindowController?
+    private let imageMenuDelegate = ImageMenuHighlightDelegate()
 
     private let defaults = UserDefaults.standard
     private let autoPasteKey = "autoPaste"
@@ -18,12 +19,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let imageLimitKey = "imageLimit"
     private let hotKeyCodeKey = "hotKeyCode"
     private let hotKeyModifiersKey = "hotKeyModifiers"
-    private let extractImageKey = "extractImageFromFiles"
-
-    private var extractImageFromFiles: Bool {
-        get { defaults.bool(forKey: extractImageKey) }
-        set { defaults.set(newValue, forKey: extractImageKey) }
-    }
 
     private var autoPaste: Bool {
         get { defaults.bool(forKey: autoPasteKey) }
@@ -39,9 +34,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         if defaults.object(forKey: autoPasteKey) == nil {
             defaults.set(true, forKey: autoPasteKey)
-        }
-        if defaults.object(forKey: extractImageKey) == nil {
-            defaults.set(true, forKey: extractImageKey)
         }
         if defaults.object(forKey: hotKeyCodeKey) == nil {
             defaults.set(9, forKey: hotKeyCodeKey) // V
@@ -59,17 +51,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            if let image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Klipski") {
-                image.isTemplate = true
-                button.image = image
-            } else {
-                button.title = "📋"
-            }
+            button.image = AppDelegate.statusBarIcon()
         }
         menu.delegate = self
         statusItem.menu = menu
 
-        clipboard.extractImageFromFiles = extractImageFromFiles
         clipboard.start()
 
         let code = UInt32(defaults.integer(forKey: hotKeyCodeKey))
@@ -86,6 +72,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    /// Icona "K" nitida e template (si adatta a barra chiara/scura).
+    private static func statusBarIcon() -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let style = NSMutableParagraphStyle()
+            style.alignment = .center
+            let font = NSFont.systemFont(ofSize: 15, weight: .bold)
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: font,
+                .foregroundColor: NSColor.black,
+                .paragraphStyle: style
+            ]
+            let letter = "K" as NSString
+            let textSize = letter.size(withAttributes: attrs)
+            let point = NSPoint(x: 0, y: (rect.height - textSize.height) / 2)
+            letter.draw(in: NSRect(x: point.x, y: point.y, width: rect.width, height: textSize.height),
+                        withAttributes: attrs)
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }
+
     // MARK: - Menu
 
     private func showMenu() {
@@ -95,8 +104,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
-        menu.addItem(makeHistoryMenu(title: "Testi", kind: .text))
-        menu.addItem(makeHistoryMenu(title: "Immagini", kind: .image))
+        menu.addItem(makeTextMenu())
+        menu.addItem(makeImageMenu())
 
         menu.addItem(.separator())
         addSnippetFolders(to: menu)
@@ -110,11 +119,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         autoItem.target = self
         autoItem.state = autoActive ? .on : .off
         menu.addItem(autoItem)
-
-        let extractItem = NSMenuItem(title: "Estrai immagine dai file copiati", action: #selector(toggleExtractImage), keyEquivalent: "")
-        extractItem.target = self
-        extractItem.state = extractImageFromFiles ? .on : .off
-        menu.addItem(extractItem)
 
         let loginItem = NSMenuItem(title: "Avvia al login", action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
@@ -138,17 +142,64 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(quitItem)
     }
 
-    private func makeHistoryMenu(title: String, kind: ClipItem.Kind) -> NSMenuItem {
-        let entries = history.items.enumerated().filter { $0.element.kind == kind }
-        let parent = NSMenuItem(title: "\(title) (\(entries.count))", action: nil, keyEquivalent: "")
+    private func makeTextMenu() -> NSMenuItem {
+        let count = history.items.lazy.filter { $0.kind == .text }.count
+        let parent = NSMenuItem(title: "Testi (\(count))", action: nil, keyEquivalent: "")
         let submenu = NSMenu()
+
+        let searchItem = NSMenuItem()
+        let searchView = MenuSearchField(frame: NSRect(x: 0, y: 0, width: 260, height: 36))
+        searchView.onChange = { [weak self, weak submenu] query in
+            guard let self, let submenu else { return }
+            self.populateTextMenu(submenu, query: query)
+        }
+        searchItem.view = searchView
+        submenu.addItem(searchItem)
+
+        populateTextMenu(submenu, query: "")
+        parent.submenu = submenu
+        return parent
+    }
+
+    /// Riempie il sottomenu Testi sotto il campo di ricerca (item 0), filtrando per `query`.
+    private func populateTextMenu(_ submenu: NSMenu, query: String) {
+        while submenu.items.count > 1 {
+            submenu.removeItem(at: 1)
+        }
+        let entries = history.items.enumerated().filter { $0.element.kind == .text }
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        let filtered = q.isEmpty ? Array(entries) : entries.filter { ($0.element.text ?? "").lowercased().contains(q) }
+
+        if filtered.isEmpty {
+            let empty = NSMenuItem(title: q.isEmpty ? "Vuoto" : "Nessun risultato", action: nil, keyEquivalent: "")
+            empty.isEnabled = false
+            submenu.addItem(empty)
+        } else {
+            for (index, item) in filtered {
+                submenu.addItem(makeHistoryItem(item, index: index))
+            }
+            MenuHighlighter.highlightFirstResult(in: submenu)
+        }
+    }
+
+    private func makeImageMenu() -> NSMenuItem {
+        let entries = history.items.enumerated().filter { $0.element.kind == .image }
+        let parent = NSMenuItem(title: "Immagini (\(entries.count))", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        submenu.delegate = imageMenuDelegate
         if entries.isEmpty {
             let empty = NSMenuItem(title: "Vuoto", action: nil, keyEquivalent: "")
             empty.isEnabled = false
             submenu.addItem(empty)
         } else {
             for (index, item) in entries {
-                submenu.addItem(makeHistoryItem(item, index: index))
+                guard let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) else { continue }
+                let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                menuItem.target = self
+                menuItem.tag = index
+                menuItem.image = thumbnail(image)
+                menuItem.representedObject = url // usata dal delegate per l'anteprima
+                submenu.addItem(menuItem)
             }
         }
         parent.submenu = submenu
@@ -156,20 +207,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func makeHistoryItem(_ item: ClipItem, index: Int) -> NSMenuItem {
-        let menuItem = NSMenuItem(title: "", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
-        menuItem.target = self
-        menuItem.tag = index
-
         switch item.kind {
         case .text:
-            menuItem.title = truncate(item.text ?? "")
+            // Testo con formattazione: sottomenu con la scelta. Altrimenti click singolo.
+            if item.rtfData != nil {
+                let parent = NSMenuItem(title: truncate(item.text ?? ""), action: nil, keyEquivalent: "")
+                let submenu = NSMenu()
+                let formatted = NSMenuItem(title: "Incolla con formattazione", action: #selector(selectTextFormatted(_:)), keyEquivalent: "")
+                formatted.target = self
+                formatted.tag = index
+                submenu.addItem(formatted)
+                let plain = NSMenuItem(title: "Incolla solo testo", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                plain.target = self
+                plain.tag = index
+                submenu.addItem(plain)
+                parent.submenu = submenu
+                return parent
+            }
+            let menuItem = NSMenuItem(title: truncate(item.text ?? ""), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.tag = index
+            return menuItem
         case .image:
-            menuItem.title = "Immagine"
+            let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.tag = index
             if let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) {
                 menuItem.image = thumbnail(image)
             }
+            return menuItem
         }
-        return menuItem
     }
 
     private func addSnippetFolders(to menu: NSMenu) {
@@ -221,6 +288,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         pasteIfNeeded()
     }
 
+    @objc private func selectTextFormatted(_ sender: NSMenuItem) {
+        guard history.items.indices.contains(sender.tag) else { return }
+        let item = history.items[sender.tag]
+        if let rtf = item.rtfData {
+            clipboard.setRichText(rtf, plain: item.text ?? "")
+        } else {
+            clipboard.setText(item.text ?? "")
+        }
+        pasteIfNeeded()
+    }
+
     @objc private func selectSnippet(_ sender: NSMenuItem) {
         guard let ref = sender.representedObject as? String else { return }
         let parts = ref.split(separator: ":").compactMap { Int($0) }
@@ -249,11 +327,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
-    @objc private func toggleExtractImage() {
-        extractImageFromFiles.toggle()
-        clipboard.extractImageFromFiles = extractImageFromFiles
-    }
-
     @objc private func toggleLogin() {
         LoginItemManager.setEnabled(!LoginItemManager.isEnabled)
     }
@@ -280,13 +353,83 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     defaults.set(Int(newCode), forKey: codeKey)
                     defaults.set(Int(newMods), forKey: modsKey)
                     self?.hotKey.update(keyCode: newCode, modifiers: newMods)
-                }
+                },
+                onExport: { [weak self] in self?.exportData() },
+                onImport: { [weak self] in self?.importData() }
             )
         }
         settingsController?.reloadAll()
         NSApp.activate(ignoringOtherApps: true)
         settingsController?.showWindow(nil)
         settingsController?.window?.makeKeyAndOrderFront(nil)
+    }
+
+    private struct KlipskiBackup: Codable {
+        var snippets: [SnippetFolder]
+        var textLimit: Int
+        var imageLimit: Int
+        var autoPaste: Bool
+        var hotKeyCode: Int
+        var hotKeyModifiers: Int
+    }
+
+    private func exportData() {
+        let backup = KlipskiBackup(
+            snippets: snippets.folders,
+            textLimit: history.textLimit,
+            imageLimit: history.imageLimit,
+            autoPaste: autoPaste,
+            hotKeyCode: defaults.integer(forKey: hotKeyCodeKey),
+            hotKeyModifiers: defaults.integer(forKey: hotKeyModifiersKey)
+        )
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "Klipski-backup.json"
+        panel.allowedContentTypes = [.json]
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted]
+            try encoder.encode(backup).write(to: url)
+        } catch {
+            showAlert(title: "Esportazione fallita", text: "\(error.localizedDescription)")
+        }
+    }
+
+    private func importData() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.message = "Seleziona un file Klipski-backup.json"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard let data = try? Data(contentsOf: url),
+              let backup = try? JSONDecoder().decode(KlipskiBackup.self, from: data) else {
+            showAlert(title: "Importazione fallita", text: "Il file non è un backup di Klipski valido.")
+            return
+        }
+        snippets.replaceAll(backup.snippets)
+        defaults.set(backup.textLimit, forKey: textLimitKey)
+        defaults.set(backup.imageLimit, forKey: imageLimitKey)
+        defaults.set(backup.hotKeyCode, forKey: hotKeyCodeKey)
+        defaults.set(backup.hotKeyModifiers, forKey: hotKeyModifiersKey)
+        autoPaste = backup.autoPaste
+
+        history.updateLimits(textLimit: backup.textLimit, imageLimit: backup.imageLimit)
+        hotKey.update(keyCode: UInt32(backup.hotKeyCode), modifiers: UInt32(backup.hotKeyModifiers))
+
+        settingsController?.reloadAll()
+        settingsController?.setRecorder(keyCode: UInt32(backup.hotKeyCode), modifiers: UInt32(backup.hotKeyModifiers))
+        showAlert(title: "Importazione completata", text: "Snippet e impostazioni ripristinati.")
+    }
+
+    private func showAlert(title: String, text: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = text
+        alert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     @objc private func clearHistory() {

@@ -6,9 +6,15 @@ struct ClipItem: Codable, Identifiable {
     let id: UUID
     let kind: Kind
     var text: String?
+    var rtfBase64: String?
     var imageFile: String?
     var hash: Int
     let createdAt: Date
+
+    var rtfData: Data? {
+        guard let rtfBase64 else { return nil }
+        return Data(base64Encoded: rtfBase64)
+    }
 }
 
 @MainActor
@@ -37,12 +43,15 @@ final class HistoryStore {
 
     // MARK: - Add
 
-    func addText(_ text: String) {
+    func addText(_ text: String, rtf: Data? = nil) {
         let trimmed = text
         guard !trimmed.isEmpty else { return }
         let h = HistoryStore.stableHash(Array(trimmed.utf8))
         items.removeAll { $0.kind == .text && $0.hash == h && $0.text == trimmed }
-        items.insert(ClipItem(id: UUID(), kind: .text, text: trimmed, imageFile: nil, hash: h, createdAt: Date()), at: 0)
+        let item = ClipItem(id: UUID(), kind: .text, text: trimmed,
+                            rtfBase64: rtf?.base64EncodedString(), imageFile: nil,
+                            hash: h, createdAt: Date())
+        items.insert(item, at: 0)
         trim()
         save()
     }
@@ -64,7 +73,7 @@ final class HistoryStore {
             NSLog("Klipski: impossibile salvare immagine: \(error)")
             return
         }
-        items.insert(ClipItem(id: UUID(), kind: .image, text: nil, imageFile: filename, hash: h, createdAt: Date()), at: 0)
+        items.insert(ClipItem(id: UUID(), kind: .image, text: nil, rtfBase64: nil, imageFile: filename, hash: h, createdAt: Date()), at: 0)
         trim()
         save()
     }

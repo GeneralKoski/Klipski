@@ -8,7 +8,6 @@ final class ClipboardManager {
 
     private let history: HistoryStore
     var onChange: (() -> Void)?
-    var extractImageFromFiles = false
 
     init(history: HistoryStore) {
         self.history = history
@@ -25,6 +24,15 @@ final class ClipboardManager {
     func setText(_ text: String) {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
+        lastChangeCount = pasteboard.changeCount
+    }
+
+    /// Scrive testo formattato (RTF) + il fallback in testo semplice.
+    func setRichText(_ rtf: Data, plain: String) {
+        pasteboard.clearContents()
+        pasteboard.declareTypes([.rtf, .string], owner: nil)
+        pasteboard.setData(rtf, forType: .rtf)
+        pasteboard.setString(plain, forType: .string)
         lastChangeCount = pasteboard.changeCount
     }
 
@@ -45,21 +53,19 @@ final class ClipboardManager {
     }
 
     private func capture() {
-        // 1. File immagine copiato dal Finder (es. screenshot sul Desktop).
+        // 1. File immagine copiato dal Finder (es. screenshot sul Desktop):
+        // sostituisce sempre il file negli appunti con l'immagine vera,
+        // così copiare un'immagine = avere un'immagine (Cmd+V incolla la foto, non il nome).
         if let data = imageDataFromFileURL() {
             history.addImage(data)
-            if extractImageFromFiles {
-                // Sostituisce il file negli appunti con l'immagine vera,
-                // così Cmd+V incolla la foto invece del nome del file.
-                setImage(data)
-            }
+            setImage(data)
             onChange?()
             return
         }
-        // 2. Testo.
+        // 2. Testo (con RTF se la sorgente lo fornisce, per poter incollare con formattazione).
         if let str = pasteboard.string(forType: .string),
            !str.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            history.addText(str)
+            history.addText(str, rtf: pasteboard.data(forType: .rtf))
             onChange?()
             return
         }

@@ -9,6 +9,8 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     private let hotKeyCode: UInt32
     private let hotKeyModifiers: UInt32
     private let onHotKeyChange: (UInt32, UInt32) -> Void
+    private let onExport: () -> Void
+    private let onImport: () -> Void
 
     private let textPresets = [10, 25, 50, 100, 200]
     private let imagePresets = [5, 10, 20, 50]
@@ -27,16 +29,20 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     init(snippets: SnippetStore, history: HistoryStore,
          hotKeyCode: UInt32, hotKeyModifiers: UInt32,
          saveLimits: @escaping (Int, Int) -> Void,
-         onHotKeyChange: @escaping (UInt32, UInt32) -> Void) {
+         onHotKeyChange: @escaping (UInt32, UInt32) -> Void,
+         onExport: @escaping () -> Void,
+         onImport: @escaping () -> Void) {
         self.snippets = snippets
         self.history = history
         self.saveLimits = saveLimits
         self.hotKeyCode = hotKeyCode
         self.hotKeyModifiers = hotKeyModifiers
         self.onHotKeyChange = onHotKeyChange
+        self.onExport = onExport
+        self.onImport = onImport
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 580),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -54,6 +60,11 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     private func buildUI() {
         guard let content = window?.contentView else { return }
+
+        // Riga backup dati.
+        content.addSubview(makeLabel("Backup:", frame: NSRect(x: 20, y: 544, width: 70, height: 18)))
+        content.addSubview(makeButton("Esporta dati…", frame: NSRect(x: 92, y: 538, width: 140, height: 26), action: #selector(exportData)))
+        content.addSubview(makeButton("Importa dati…", frame: NSRect(x: 238, y: 538, width: 140, height: 26), action: #selector(importData)))
 
         // Riga scorciatoia globale.
         content.addSubview(makeLabel("Scorciatoia apertura:", frame: NSRect(x: 20, y: 502, width: 170, height: 18)))
@@ -152,14 +163,21 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("col"))
         column.width = 160
         column.isEditable = true
+        column.dataCell = VerticallyCenteredTextFieldCell()
         table.addTableColumn(column)
         table.headerView = nil
+        table.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
+        table.rowHeight = 22
+        table.usesAutomaticRowHeights = false
         return table
     }
 
     private func scrollWrapping(_ table: NSTableView, frame: NSRect) -> NSScrollView {
         let scroll = NSScrollView(frame: frame)
         scroll.hasVerticalScroller = true
+        scroll.hasHorizontalScroller = false
+        scroll.autohidesScrollers = true
+        scroll.scrollerStyle = .overlay
         scroll.borderType = .bezelBorder
         scroll.documentView = table
         return scroll
@@ -220,6 +238,14 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     }
 
     // MARK: - Azioni
+
+    @objc private func exportData() {
+        onExport()
+    }
+
+    @objc private func importData() {
+        onImport()
+    }
 
     @objc private func importFromClipy() {
         let panel = NSOpenPanel()
@@ -394,5 +420,31 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     func windowWillClose(_ notification: Notification) {
         commitEditor()
+    }
+}
+
+/// Cella di tabella che centra verticalmente il testo nella riga.
+private final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
+    private func centered(_ rect: NSRect) -> NSRect {
+        let textSize = cellSize(forBounds: rect)
+        let dy = max(0, (rect.height - textSize.height) / 2)
+        return NSRect(x: rect.origin.x, y: rect.origin.y + dy,
+                      width: rect.width, height: textSize.height)
+    }
+
+    override func drawInterior(withFrame cellFrame: NSRect, in controlView: NSView) {
+        super.drawInterior(withFrame: centered(cellFrame), in: controlView)
+    }
+
+    override func edit(withFrame rect: NSRect, in controlView: NSView,
+                       editor textObj: NSText, delegate: Any?, event: NSEvent?) {
+        super.edit(withFrame: centered(rect), in: controlView,
+                   editor: textObj, delegate: delegate, event: event)
+    }
+
+    override func select(withFrame rect: NSRect, in controlView: NSView,
+                         editor textObj: NSText, delegate: Any?, start selStart: Int, length selLength: Int) {
+        super.select(withFrame: centered(rect), in: controlView,
+                     editor: textObj, delegate: delegate, start: selStart, length: selLength)
     }
 }

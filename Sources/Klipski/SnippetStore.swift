@@ -34,6 +34,11 @@ final class SnippetStore {
         save()
     }
 
+    func replaceAll(_ newFolders: [SnippetFolder]) {
+        folders = newFolders
+        save()
+    }
+
     func deleteFolder(at index: Int) {
         guard folders.indices.contains(index) else { return }
         folders.remove(at: index)
