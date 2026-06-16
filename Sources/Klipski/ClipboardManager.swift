@@ -8,6 +8,7 @@ final class ClipboardManager {
 
     private let history: HistoryStore
     var onChange: (() -> Void)?
+    var extractImageFromFiles = false
 
     init(history: HistoryStore) {
         self.history = history
@@ -29,6 +30,10 @@ final class ClipboardManager {
 
     func setImage(_ data: Data) {
         pasteboard.clearContents()
+        pasteboard.declareTypes([.tiff, .png], owner: nil)
+        if let image = NSImage(data: data), let tiff = image.tiffRepresentation {
+            pasteboard.setData(tiff, forType: .tiff)
+        }
         pasteboard.setData(data, forType: .png)
         lastChangeCount = pasteboard.changeCount
     }
@@ -43,6 +48,11 @@ final class ClipboardManager {
         // 1. File immagine copiato dal Finder (es. screenshot sul Desktop).
         if let data = imageDataFromFileURL() {
             history.addImage(data)
+            if extractImageFromFiles {
+                // Sostituisce il file negli appunti con l'immagine vera,
+                // così Cmd+V incolla la foto invece del nome del file.
+                setImage(data)
+            }
             onChange?()
             return
         }

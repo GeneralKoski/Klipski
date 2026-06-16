@@ -18,6 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let imageLimitKey = "imageLimit"
     private let hotKeyCodeKey = "hotKeyCode"
     private let hotKeyModifiersKey = "hotKeyModifiers"
+    private let extractImageKey = "extractImageFromFiles"
+
+    private var extractImageFromFiles: Bool {
+        get { defaults.bool(forKey: extractImageKey) }
+        set { defaults.set(newValue, forKey: extractImageKey) }
+    }
 
     private var autoPaste: Bool {
         get { defaults.bool(forKey: autoPasteKey) }
@@ -33,6 +39,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         if defaults.object(forKey: autoPasteKey) == nil {
             defaults.set(true, forKey: autoPasteKey)
+        }
+        if defaults.object(forKey: extractImageKey) == nil {
+            defaults.set(true, forKey: extractImageKey)
         }
         if defaults.object(forKey: hotKeyCodeKey) == nil {
             defaults.set(9, forKey: hotKeyCodeKey) // V
@@ -60,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
+        clipboard.extractImageFromFiles = extractImageFromFiles
         clipboard.start()
 
         let code = UInt32(defaults.integer(forKey: hotKeyCodeKey))
@@ -100,6 +110,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         autoItem.target = self
         autoItem.state = autoActive ? .on : .off
         menu.addItem(autoItem)
+
+        let extractItem = NSMenuItem(title: "Estrai immagine dai file copiati", action: #selector(toggleExtractImage), keyEquivalent: "")
+        extractItem.target = self
+        extractItem.state = extractImageFromFiles ? .on : .off
+        menu.addItem(extractItem)
 
         let loginItem = NSMenuItem(title: "Avvia al login", action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
@@ -149,7 +164,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case .text:
             menuItem.title = truncate(item.text ?? "")
         case .image:
-            menuItem.title = "🖼 Immagine"
+            menuItem.title = "Immagine"
+            if let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) {
+                menuItem.image = thumbnail(image)
+            }
         }
         return menuItem
     }
@@ -231,6 +249,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
     }
 
+    @objc private func toggleExtractImage() {
+        extractImageFromFiles.toggle()
+        clipboard.extractImageFromFiles = extractImageFromFiles
+    }
+
     @objc private func toggleLogin() {
         LoginItemManager.setEnabled(!LoginItemManager.isEnabled)
     }
@@ -282,6 +305,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             Paster.paste()
         }
+    }
+
+    private func thumbnail(_ image: NSImage, maxSide: CGFloat = 48) -> NSImage {
+        let size = image.size
+        guard size.width > 0, size.height > 0 else { return image }
+        let scale = min(maxSide / size.width, maxSide / size.height, 1)
+        let target = NSSize(width: size.width * scale, height: size.height * scale)
+        let thumb = NSImage(size: target)
+        thumb.lockFocus()
+        image.draw(in: NSRect(origin: .zero, size: target),
+                   from: NSRect(origin: .zero, size: size),
+                   operation: .copy, fraction: 1.0)
+        thumb.unlockFocus()
+        return thumb
     }
 
     private func truncate(_ text: String, max: Int = 50) -> String {
