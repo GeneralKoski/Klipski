@@ -42,17 +42,17 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     id: "windows",
     label: "Windows",
     format: ".msi",
-    url: env.VITE_DL_WINDOWS || "#download-windows",
+    url: env.VITE_DL_WINDOWS || "https://github.com/GeneralKoski/Klipski/releases/latest/download/Klipski-windows.msi",
     requirement: "Windows 10 / 11 (64-bit)",
-    available: false,
+    available: true,
   },
   linux: {
     id: "linux",
     label: "Linux",
     format: ".AppImage",
-    url: env.VITE_DL_LINUX || "#download-linux",
+    url: env.VITE_DL_LINUX || "https://github.com/GeneralKoski/Klipski/releases/latest/download/Klipski-linux.AppImage",
     requirement: "AppImage · distribuzioni glibc recenti",
-    available: false,
+    available: true,
   },
 };
 

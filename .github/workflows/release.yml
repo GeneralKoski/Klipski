@@ -17,8 +17,12 @@ jobs:
         include:
           - platform: ubuntu-22.04
             args: ""
+            bundleGlob: "desktop/src-tauri/target/release/bundle/appimage/*.AppImage"
+            assetName: "Klipski-linux.AppImage"
           - platform: windows-latest
             args: ""
+            bundleGlob: "desktop/src-tauri/target/release/bundle/msi/*_en-US.msi"
+            assetName: "Klipski-windows.msi"
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -50,20 +54,27 @@ jobs:
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: "Klipski ${{ github.ref_name }}"
-          releaseDraft: false
-          prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Rinomina l'installer con nome stabile
+        shell: bash
+        run: cp "$(ls ${{ matrix.bundleGlob }} | head -n1)" "${{ matrix.assetName }}"
+
+      - name: Carica nella release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          files: ${{ matrix.assetName }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # macOS: app Swift nativa esistente.
   macos:
     needs: desktop
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
