@@ -53,7 +53,7 @@ export function Hero({
           <div className="hw-side">
             <p className="hw-group">{t.mockup.text}</p>
             <p className="hw-item">Lorem ipsum dolor sit amet</p>
-            <p className="hw-item">https://klipski.app</p>
+            <p className="hw-item">https://klipski.martin-trajkovski.it</p>
             <p className="hw-item active">npm install</p>
             <p className="hw-group">{t.mockup.images}</p>
             <p className="hw-item">screenshot-2026.png</p>

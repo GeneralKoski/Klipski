@@ -8,7 +8,7 @@ export const SITE = {
   tagline: "Il gestore di appunti che mancava al tuo computer",
   description:
     "Klipski è un clipboard manager leggero e nativo: cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico. Gratis e open source per macOS, Windows e Linux.",
-  url: "https://klipski.app",
+  url: "https://klipski.martin-trajkovski.it",
   repo: "https://github.com/GeneralKoski/Klipski",
   version: env.VITE_APP_VERSION ?? "1.0.0",
   author: "Klipski",

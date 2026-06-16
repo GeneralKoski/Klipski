@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://klipski.app/sitemap.xml
+Sitemap: https://klipski.martin-trajkovski.it/sitemap.xml
