@@ -330,9 +330,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch item.kind {
         case .text:
             clipboard.setText(item.text ?? "")
+            history.addText(item.text ?? "", rtf: item.rtfData, concealed: item.concealed ?? false)
         case .image:
             if let url = history.imageURL(for: item), let data = try? Data(contentsOf: url) {
                 clipboard.setImage(data)
+                history.addImage(data)
             }
         }
         pasteIfNeeded()
@@ -346,6 +348,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             clipboard.setText(item.text ?? "")
         }
+        history.addText(item.text ?? "", rtf: item.rtfData, concealed: item.concealed ?? false)
         pasteIfNeeded()
     }
 

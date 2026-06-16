@@ -12,7 +12,8 @@ Clipboard manager multipiattaforma (sostituto di Clipy): cronologia di testi e i
 .                 app macOS (Swift) - Sources/, Package.swift, build.sh
 desktop/          client Windows/Linux (Tauri): src/ (UI React) + src-tauri/ (Rust)
 website/          sito vetrina (React + Vite) con rilevamento OS, SEO, sitemap
-.github/workflows release.yml (binari) + website.yml (deploy su GitHub Pages)
+deploy.sh         deploy del sito sul server (pull + build, servito da Nginx)
+.github/workflows release.yml (build dei binari su tag)
 ```
 
 I tre progetti sono indipendenti: l'app macOS resta invariata, gli altri si aggiungono senza toccarla.
