@@ -16,3 +16,6 @@ website/.env
 
 # TS build info
 *.tsbuildinfo
+
+*.dmg
+website/public/*.dmg
