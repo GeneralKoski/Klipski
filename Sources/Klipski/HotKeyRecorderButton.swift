@@ -58,7 +58,7 @@ final class HotKeyRecorderButton: NSButton {
     }
 
     private func refreshTitle() {
-        title = recording ? "Premi i tasti…" : HotKeyFormatter.string(keyCode: keyCode, modifiers: modifiers)
+        title = recording ? L("Premi i tasti…") : HotKeyFormatter.string(keyCode: keyCode, modifiers: modifiers)
     }
 
     override func mouseDown(with event: NSEvent) {

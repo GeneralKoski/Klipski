@@ -11,9 +11,17 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     private let onHotKeyChange: (UInt32, UInt32) -> Void
     private let onExport: () -> Void
     private let onImport: () -> Void
+    private let currentLanguage: String?
+    private let onLanguageChange: (String?) -> Void
 
     private let textPresets = [10, 25, 50, 100, 200]
     private let imagePresets = [5, 10, 20, 50]
+    private let languages: [(code: String, name: String)] = [
+        ("it", "Italiano"), ("en", "English"), ("es", "Español"), ("fr", "Français"),
+        ("de", "Deutsch"), ("pt", "Português"), ("ru", "Русский"), ("ja", "日本語"),
+        ("zh-Hans", "简体中文"), ("ar", "العربية")
+    ]
+    private var languagePopup: NSPopUpButton!
 
     private var foldersTable: NSTableView!
     private var snippetsTable: NSTableView!
@@ -31,7 +39,9 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
          saveLimits: @escaping (Int, Int) -> Void,
          onHotKeyChange: @escaping (UInt32, UInt32) -> Void,
          onExport: @escaping () -> Void,
-         onImport: @escaping () -> Void) {
+         onImport: @escaping () -> Void,
+         currentLanguage: String?,
+         onLanguageChange: @escaping (String?) -> Void) {
         self.snippets = snippets
         self.history = history
         self.saveLimits = saveLimits
@@ -40,6 +50,8 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         self.onHotKeyChange = onHotKeyChange
         self.onExport = onExport
         self.onImport = onImport
+        self.currentLanguage = currentLanguage
+        self.onLanguageChange = onLanguageChange
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 720, height: 580),
@@ -47,7 +59,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
             backing: .buffered,
             defer: false
         )
-        window.title = "Klipski - Preferenze"
+        window.title = L("Klipski - Preferenze")
         window.center()
         super.init(window: window)
         window.delegate = self
@@ -62,12 +74,26 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         guard let content = window?.contentView else { return }
 
         // Riga backup dati.
-        content.addSubview(makeLabel("Backup:", frame: NSRect(x: 20, y: 544, width: 70, height: 18)))
-        content.addSubview(makeButton("Esporta dati…", frame: NSRect(x: 92, y: 538, width: 140, height: 26), action: #selector(exportData)))
-        content.addSubview(makeButton("Importa dati…", frame: NSRect(x: 238, y: 538, width: 140, height: 26), action: #selector(importData)))
+        content.addSubview(makeLabel(L("Backup:"), frame: NSRect(x: 20, y: 544, width: 70, height: 18)))
+        content.addSubview(makeButton(L("Esporta dati…"), frame: NSRect(x: 92, y: 538, width: 140, height: 26), action: #selector(exportData)))
+        content.addSubview(makeButton(L("Importa dati…"), frame: NSRect(x: 238, y: 538, width: 140, height: 26), action: #selector(importData)))
+
+        // Selettore lingua (richiede riavvio dell'app).
+        content.addSubview(makeLabel(L("Lingua:"), frame: NSRect(x: 430, y: 544, width: 62, height: 18)))
+        languagePopup = NSPopUpButton(frame: NSRect(x: 494, y: 538, width: 206, height: 26))
+        languagePopup.addItem(withTitle: L("Automatica (sistema)"))
+        languages.forEach { languagePopup.addItem(withTitle: $0.name) }
+        if let current = currentLanguage, let idx = languages.firstIndex(where: { $0.code == current }) {
+            languagePopup.selectItem(at: idx + 1)
+        } else {
+            languagePopup.selectItem(at: 0)
+        }
+        languagePopup.target = self
+        languagePopup.action = #selector(languageChanged)
+        content.addSubview(languagePopup)
 
         // Riga scorciatoia globale.
-        content.addSubview(makeLabel("Scorciatoia apertura:", frame: NSRect(x: 20, y: 502, width: 170, height: 18)))
+        content.addSubview(makeLabel(L("Scorciatoia apertura:"), frame: NSRect(x: 20, y: 502, width: 170, height: 18)))
         hotKeyRecorder = HotKeyRecorderButton(frame: NSRect(x: 190, y: 496, width: 160, height: 26))
         hotKeyRecorder.bezelStyle = .rounded
         hotKeyRecorder.setHotKey(keyCode: hotKeyCode, modifiers: hotKeyModifiers)
@@ -75,14 +101,14 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
             self?.onHotKeyChange(code, mods)
         }
         content.addSubview(hotKeyRecorder)
-        content.addSubview(makeLabel("(clicca e premi la combinazione, Esc annulla)",
+        content.addSubview(makeLabel(L("(clicca e premi la combinazione, Esc annulla)"),
                                      frame: NSRect(x: 358, y: 502, width: 340, height: 18)))
 
         // Riga limiti cronologia.
-        let limitsLabel = makeLabel("Cronologia - elementi mostrati:", frame: NSRect(x: 20, y: 458, width: 230, height: 18))
+        let limitsLabel = makeLabel(L("Cronologia - elementi mostrati:"), frame: NSRect(x: 20, y: 458, width: 230, height: 18))
         content.addSubview(limitsLabel)
 
-        content.addSubview(makeLabel("Testi:", frame: NSRect(x: 250, y: 458, width: 45, height: 18)))
+        content.addSubview(makeLabel(L("Testi:"), frame: NSRect(x: 250, y: 458, width: 45, height: 18)))
         textLimitPopup = NSPopUpButton(frame: NSRect(x: 298, y: 452, width: 72, height: 26))
         textLimitPopup.addItems(withTitles: textPresets.map(String.init))
         textLimitPopup.selectItem(withTitle: String(history.textLimit))
@@ -90,7 +116,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         textLimitPopup.action = #selector(limitsChanged)
         content.addSubview(textLimitPopup)
 
-        content.addSubview(makeLabel("Immagini:", frame: NSRect(x: 388, y: 458, width: 65, height: 18)))
+        content.addSubview(makeLabel(L("Immagini:"), frame: NSRect(x: 388, y: 458, width: 65, height: 18)))
         imageLimitPopup = NSPopUpButton(frame: NSRect(x: 456, y: 452, width: 72, height: 26))
         imageLimitPopup.addItems(withTitles: imagePresets.map(String.init))
         imageLimitPopup.selectItem(withTitle: String(history.imageLimit))
@@ -98,19 +124,19 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         imageLimitPopup.action = #selector(limitsChanged)
         content.addSubview(imageLimitPopup)
 
-        content.addSubview(makeButton("Importa da Clipy…", frame: NSRect(x: 545, y: 452, width: 155, height: 26), action: #selector(importFromClipy)))
+        content.addSubview(makeButton(L("Importa da Clipy…"), frame: NSRect(x: 545, y: 452, width: 155, height: 26), action: #selector(importFromClipy)))
 
         // Intestazioni colonne snippet.
-        content.addSubview(makeLabel("Cartelle", frame: NSRect(x: 20, y: 418, width: 180, height: 18)))
-        content.addSubview(makeLabel("Snippet", frame: NSRect(x: 212, y: 418, width: 180, height: 18)))
-        content.addSubview(makeLabel("Titolo / contenuto", frame: NSRect(x: 404, y: 418, width: 296, height: 18)))
+        content.addSubview(makeLabel(L("Cartelle"), frame: NSRect(x: 20, y: 418, width: 180, height: 18)))
+        content.addSubview(makeLabel(L("Snippet"), frame: NSRect(x: 212, y: 418, width: 180, height: 18)))
+        content.addSubview(makeLabel(L("Titolo / contenuto"), frame: NSRect(x: 404, y: 418, width: 296, height: 18)))
 
         // Tabella cartelle.
         foldersTable = makeTable()
         content.addSubview(scrollWrapping(foldersTable, frame: NSRect(x: 20, y: 70, width: 180, height: 340)))
         content.addSubview(makeButton("+", frame: NSRect(x: 20, y: 38, width: 40, height: 26), action: #selector(addFolder)))
         content.addSubview(makeButton("−", frame: NSRect(x: 62, y: 38, width: 40, height: 26), action: #selector(removeFolder)))
-        content.addSubview(makeButton("Rinomina", frame: NSRect(x: 104, y: 38, width: 96, height: 26), action: #selector(renameFolder)))
+        content.addSubview(makeButton(L("Rinomina"), frame: NSRect(x: 104, y: 38, width: 96, height: 26), action: #selector(renameFolder)))
 
         // Tabella snippet.
         snippetsTable = makeTable()
@@ -120,7 +146,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
         // Editor snippet.
         titleField = NSTextField(frame: NSRect(x: 404, y: 380, width: 296, height: 26))
-        titleField.placeholderString = "Titolo"
+        titleField.placeholderString = L("Titolo")
         content.addSubview(titleField)
 
         let scroll = NSScrollView(frame: NSRect(x: 404, y: 70, width: 296, height: 300))
@@ -133,7 +159,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         scroll.documentView = contentTextView
         content.addSubview(scroll)
 
-        content.addSubview(makeButton("Salva snippet", frame: NSRect(x: 404, y: 38, width: 140, height: 26), action: #selector(saveSnippet)))
+        content.addSubview(makeButton(L("Salva snippet"), frame: NSRect(x: 404, y: 38, width: 140, height: 26), action: #selector(saveSnippet)))
 
         // Collego i data source solo ora che entrambe le tabelle esistono
         // (setDataSource innesca subito numberOfRows, che le referenzia entrambe).
@@ -251,20 +277,23 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.xml]
         panel.allowsMultipleSelection = false
-        panel.prompt = "Importa"
-        panel.message = """
-        In Clipy: icona nella barra → Edit Snippets… → menu Snippets → Export Snippets… e salva il file (consigliato: sul Desktop). Poi selezionalo qui.
-        """
+        panel.prompt = L("Importa")
+        panel.message = L("In Clipy: icona nella barra → Edit Snippets… → menu Snippets → Export Snippets… e salva il file (consigliato: sul Desktop). Poi selezionalo qui.")
         panel.directoryURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard let imported = ClipyImporter.importFolders(from: url), !imported.isEmpty else {
-            beep("Nessuno snippet trovato nel file selezionato.")
+            beep(L("Nessuno snippet trovato nel file selezionato."))
             return
         }
         snippets.importFolders(imported)
         foldersTable.reloadData()
         let total = imported.reduce(0) { $0 + $1.snippets.count }
-        beep("Importate \(imported.count) cartelle (\(total) snippet).")
+        beep(L("Importate %d cartelle (%d snippet).", imported.count, total))
+    }
+
+    @objc private func languageChanged() {
+        let idx = languagePopup.indexOfSelectedItem
+        onLanguageChange(idx == 0 ? nil : languages[idx - 1].code)
     }
 
     @objc private func limitsChanged() {
@@ -275,7 +304,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     }
 
     @objc private func addFolder() {
-        guard let name = prompt(message: "Nuova cartella", placeholder: "Nome (es. Mails)"), !name.isEmpty else { return }
+        guard let name = prompt(message: L("Nuova cartella"), placeholder: L("Nome (es. Mails)")), !name.isEmpty else { return }
         snippets.addFolder(name: name)
         foldersTable.reloadData()
         foldersTable.selectRowIndexes([snippets.folders.count - 1], byExtendingSelection: false)
@@ -284,10 +313,10 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     @objc private func removeFolder() {
         guard let index = selectedFolder else { return }
         let alert = NSAlert()
-        alert.messageText = "Eliminare la cartella \"\(snippets.folders[index].name)\"?"
-        alert.informativeText = "Verranno rimossi tutti gli snippet contenuti."
-        alert.addButton(withTitle: "Elimina")
-        alert.addButton(withTitle: "Annulla")
+        alert.messageText = L("Eliminare la cartella \"%@\"?", snippets.folders[index].name)
+        alert.informativeText = L("Verranno rimossi tutti gli snippet contenuti.")
+        alert.addButton(withTitle: L("Elimina"))
+        alert.addButton(withTitle: L("Annulla"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         snippets.deleteFolder(at: index)
         foldersTable.reloadData()
@@ -297,7 +326,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     @objc private func renameFolder() {
         guard let index = selectedFolder else { return }
-        guard let name = prompt(message: "Rinomina cartella", placeholder: snippets.folders[index].name), !name.isEmpty else { return }
+        guard let name = prompt(message: L("Rinomina cartella"), placeholder: snippets.folders[index].name), !name.isEmpty else { return }
         snippets.renameFolder(at: index, to: name)
         foldersTable.reloadData()
         foldersTable.selectRowIndexes([index], byExtendingSelection: false)
@@ -305,10 +334,10 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     @objc private func addSnippet() {
         guard let index = selectedFolder else {
-            beep("Seleziona prima una cartella.")
+            beep(L("Seleziona prima una cartella."))
             return
         }
-        snippets.addSnippet(folderIndex: index, title: "Nuovo snippet", content: "")
+        snippets.addSnippet(folderIndex: index, title: L("Nuovo snippet"), content: "")
         snippetsTable.reloadData()
         let last = snippets.folders[index].snippets.count - 1
         snippetsTable.selectRowIndexes([last], byExtendingSelection: false)
@@ -342,8 +371,8 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     private func prompt(message: String, placeholder: String) -> String? {
         let alert = NSAlert()
         alert.messageText = message
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Annulla")
+        alert.addButton(withTitle: L("OK"))
+        alert.addButton(withTitle: L("Annulla"))
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
         field.placeholderString = placeholder
         alert.accessoryView = field
@@ -356,7 +385,7 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         NSSound.beep()
         let alert = NSAlert()
         alert.messageText = message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L("OK"))
         alert.runModal()
     }
 

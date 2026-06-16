@@ -63,7 +63,7 @@ final class ClipyImporter: NSObject, XMLParserDelegate {
             inSnippet = false
         case "folder":
             let name = currentFolderName.trimmingCharacters(in: .whitespacesAndNewlines)
-            folders.append(SnippetFolder(name: name.isEmpty ? "Importata" : name, snippets: currentSnippets))
+            folders.append(SnippetFolder(name: name.isEmpty ? L("Importata") : name, snippets: currentSnippets))
             inFolder = false
         default:
             break

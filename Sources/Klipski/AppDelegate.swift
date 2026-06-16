@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let imageLimitKey = "imageLimit"
     private let hotKeyCodeKey = "hotKeyCode"
     private let hotKeyModifiersKey = "hotKeyModifiers"
+    private let languageOverrideKey = "languageOverride"
 
     private var autoPaste: Bool {
         get { defaults.bool(forKey: autoPasteKey) }
@@ -148,14 +149,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let autoActive = autoPaste && Paster.isTrusted
         let autoTitle = (autoPaste && !Paster.isTrusted)
-            ? "Incolla automaticamente (manca permesso Accessibilità)"
-            : "Incolla automaticamente"
+            ? L("Incolla automaticamente (manca permesso Accessibilità)")
+            : L("Incolla automaticamente")
         let autoItem = NSMenuItem(title: autoTitle, action: #selector(toggleAutoPaste), keyEquivalent: "")
         autoItem.target = self
         autoItem.state = autoActive ? .on : .off
         menu.addItem(autoItem)
 
-        let loginItem = NSMenuItem(title: "Avvia al login", action: #selector(toggleLogin), keyEquivalent: "")
+        let loginItem = NSMenuItem(title: L("Avvia al login"), action: #selector(toggleLogin), keyEquivalent: "")
         loginItem.target = self
         loginItem.state = LoginItemManager.isEnabled ? .on : .off
         menu.addItem(loginItem)
@@ -164,22 +165,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         // Selettore volutamente neutro (non "settings"/"preferences") per evitare
         // l'icona automatica che macOS Tahoe assegna alle voci riconosciute come Impostazioni.
-        let prefsItem = NSMenuItem(title: "Personalizza…", action: #selector(openCustomizer), keyEquivalent: "")
+        let prefsItem = NSMenuItem(title: L("Personalizza…"), action: #selector(openCustomizer), keyEquivalent: "")
         prefsItem.target = self
         menu.addItem(prefsItem)
 
-        let clearItem = NSMenuItem(title: "Pulisci cronologia", action: #selector(clearHistory), keyEquivalent: "")
+        let clearItem = NSMenuItem(title: L("Pulisci cronologia"), action: #selector(clearHistory), keyEquivalent: "")
         clearItem.target = self
         menu.addItem(clearItem)
 
-        let quitItem = NSMenuItem(title: "Esci", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: L("Esci"), action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
     }
 
     private func makeTextMenu() -> NSMenuItem {
         let count = history.items.lazy.filter { $0.kind == .text }.count
-        let parent = NSMenuItem(title: "Testi (\(count))", action: nil, keyEquivalent: "")
+        let parent = NSMenuItem(title: L("Testi (%d)", count), action: nil, keyEquivalent: "")
         let submenu = NSMenu()
 
         let searchItem = NSMenuItem()
@@ -206,7 +207,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let filtered = q.isEmpty ? Array(entries) : entries.filter { ($0.element.text ?? "").lowercased().contains(q) }
 
         if filtered.isEmpty {
-            let empty = NSMenuItem(title: q.isEmpty ? "Vuoto" : "Nessun risultato", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: q.isEmpty ? L("Vuoto") : L("Nessun risultato"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             submenu.addItem(empty)
         } else {
@@ -219,18 +220,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func makeImageMenu() -> NSMenuItem {
         let entries = history.items.enumerated().filter { $0.element.kind == .image }
-        let parent = NSMenuItem(title: "Immagini (\(entries.count))", action: nil, keyEquivalent: "")
+        let parent = NSMenuItem(title: L("Immagini (%d)", entries.count), action: nil, keyEquivalent: "")
         let submenu = NSMenu()
         submenu.delegate = imageMenuDelegate
         if entries.isEmpty {
-            let empty = NSMenuItem(title: "Vuoto", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: L("Vuoto"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             submenu.addItem(empty)
         } else {
             for (index, item) in entries {
                 guard let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) else { continue }
-                let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
-                menuItem.attributedTitle = titleWithTimestamp("Immagine", date: item.createdAt)
+                let menuItem = NSMenuItem(title: L("Immagine"), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                menuItem.attributedTitle = titleWithTimestamp(L("Immagine"), date: item.createdAt)
                 menuItem.target = self
                 menuItem.tag = index
                 menuItem.image = thumbnail(image)
@@ -260,11 +261,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 let parent = NSMenuItem(title: truncate(item.text ?? ""), action: nil, keyEquivalent: "")
                 parent.attributedTitle = titleWithTimestamp(truncate(item.text ?? ""), date: item.createdAt)
                 let submenu = NSMenu()
-                let formatted = NSMenuItem(title: "Incolla con formattazione", action: #selector(selectTextFormatted(_:)), keyEquivalent: "")
+                let formatted = NSMenuItem(title: L("Incolla con formattazione"), action: #selector(selectTextFormatted(_:)), keyEquivalent: "")
                 formatted.target = self
                 formatted.tag = index
                 submenu.addItem(formatted)
-                let plain = NSMenuItem(title: "Incolla solo testo", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                let plain = NSMenuItem(title: L("Incolla solo testo"), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
                 plain.target = self
                 plain.tag = index
                 submenu.addItem(plain)
@@ -277,8 +278,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             menuItem.tag = index
             return menuItem
         case .image:
-            let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
-            menuItem.attributedTitle = titleWithTimestamp("Immagine", date: item.createdAt)
+            let menuItem = NSMenuItem(title: L("Immagine"), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+            menuItem.attributedTitle = titleWithTimestamp(L("Immagine"), date: item.createdAt)
             menuItem.target = self
             menuItem.tag = index
             if let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) {
@@ -290,7 +291,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func addSnippetFolders(to menu: NSMenu) {
         guard !snippets.folders.isEmpty else {
-            let empty = NSMenuItem(title: "Nessuno snippet (crea da Personalizza…)", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: L("Nessuno snippet (crea da Personalizza…)"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             menu.addItem(empty)
             return
@@ -305,7 +306,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let submenu = NSMenu()
 
         if folder.snippets.isEmpty {
-            let empty = NSMenuItem(title: "Vuota", action: nil, keyEquivalent: "")
+            let empty = NSMenuItem(title: L("Vuota"), action: nil, keyEquivalent: "")
             empty.isEnabled = false
             submenu.addItem(empty)
         } else {
@@ -373,6 +374,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         LoginItemManager.setEnabled(!LoginItemManager.isEnabled)
     }
 
+    /// Imposta la lingua dell'app (nil = automatica da sistema) e riavvia per applicarla.
+    private func setLanguage(_ code: String?) {
+        if let code {
+            defaults.set(code, forKey: languageOverrideKey)
+            defaults.set([code], forKey: "AppleLanguages")
+        } else {
+            defaults.removeObject(forKey: languageOverrideKey)
+            defaults.removeObject(forKey: "AppleLanguages")
+        }
+        defaults.synchronize()
+        relaunch()
+    }
+
+    private func relaunch() {
+        let path = Bundle.main.bundlePath
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "sleep 1; open \"\(path)\""]
+        try? process.run()
+        NSApp.terminate(nil)
+    }
+
     @objc private func openCustomizer() {
         if settingsController == nil {
             let defaults = self.defaults
@@ -397,7 +420,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                     self?.hotKey.update(keyCode: newCode, modifiers: newMods)
                 },
                 onExport: { [weak self] in self?.exportData() },
-                onImport: { [weak self] in self?.importData() }
+                onImport: { [weak self] in self?.importData() },
+                currentLanguage: defaults.string(forKey: languageOverrideKey),
+                onLanguageChange: { [weak self] code in self?.setLanguage(code) }
             )
         }
         settingsController?.reloadAll()
@@ -434,7 +459,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             encoder.outputFormatting = [.prettyPrinted]
             try encoder.encode(backup).write(to: url)
         } catch {
-            showAlert(title: "Esportazione fallita", text: "\(error.localizedDescription)")
+            showAlert(title: L("Esportazione fallita"), text: "\(error.localizedDescription)")
         }
     }
 
@@ -442,12 +467,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
-        panel.message = "Seleziona un file Klipski-backup.json"
+        panel.message = L("Seleziona un file Klipski-backup.json")
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
         guard let data = try? Data(contentsOf: url),
               let backup = try? JSONDecoder().decode(KlipskiBackup.self, from: data) else {
-            showAlert(title: "Importazione fallita", text: "Il file non è un backup di Klipski valido.")
+            showAlert(title: L("Importazione fallita"), text: L("Il file non è un backup di Klipski valido."))
             return
         }
         snippets.replaceAll(backup.snippets)
@@ -462,14 +487,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         settingsController?.reloadAll()
         settingsController?.setRecorder(keyCode: UInt32(backup.hotKeyCode), modifiers: UInt32(backup.hotKeyModifiers))
-        showAlert(title: "Importazione completata", text: "Snippet e impostazioni ripristinati.")
+        showAlert(title: L("Importazione completata"), text: L("Snippet e impostazioni ripristinati."))
     }
 
     private func showAlert(title: String, text: String) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = text
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: L("OK"))
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }
@@ -518,7 +543,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .font: NSFont.menuFont(ofSize: 0)
         ])
         let elapsed = Date().timeIntervalSince(date)
-        let relative = elapsed < 3 ? "adesso" : AppDelegate.relativeFormatter.localizedString(for: date, relativeTo: Date())
+        let relative = elapsed < 3 ? L("adesso") : AppDelegate.relativeFormatter.localizedString(for: date, relativeTo: Date())
         let stamp = "   " + relative
         result.append(NSAttributedString(string: stamp, attributes: [
             .font: NSFont.menuFont(ofSize: NSFont.smallSystemFontSize),

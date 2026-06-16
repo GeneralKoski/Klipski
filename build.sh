@@ -25,6 +25,11 @@ if [ -f "Resources/$APP_NAME.icns" ]; then
     cp "Resources/$APP_NAME.icns" "$APP/Contents/Resources/$APP_NAME.icns"
 fi
 
+# Localizzazioni: copia tutte le cartelle <lingua>.lproj nel bundle.
+for lproj in Resources/*.lproj; do
+    [ -d "$lproj" ] && cp -R "$lproj" "$APP/Contents/Resources/"
+done
+
 cat > "$APP/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -38,6 +43,21 @@ cat > "$APP/Contents/Info.plist" <<EOF
     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>
     <string>$BUNDLE_ID</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>it</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>it</string>
+        <string>en</string>
+        <string>es</string>
+        <string>fr</string>
+        <string>de</string>
+        <string>pt</string>
+        <string>ru</string>
+        <string>ja</string>
+        <string>zh-Hans</string>
+        <string>ar</string>
+    </array>
     <key>CFBundleVersion</key>
     <string>$VERSION</string>
     <key>CFBundleShortVersionString</key>

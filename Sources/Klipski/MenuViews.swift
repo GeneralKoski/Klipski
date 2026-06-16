@@ -26,7 +26,7 @@ final class MenuSearchField: NSView, NSSearchFieldDelegate {
         field.frame = NSRect(x: 8, y: (frameRect.height - h) / 2, width: frameRect.width - 16, height: h)
         field.autoresizingMask = [.width]
         field.delegate = self
-        field.placeholderString = "Cerca…"
+        field.placeholderString = L("Cerca…")
         field.controlSize = .regular
         field.sendsSearchStringImmediately = true
         field.sendsWholeSearchString = false

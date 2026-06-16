@@ -89,7 +89,7 @@ final class SnippetStore {
             }
             // Migrazione dal vecchio formato (lista piatta di snippet).
             if let flat = try? JSONDecoder().decode([Snippet].self, from: data) {
-                folders = [SnippetFolder(name: "Generale", snippets: flat)]
+                folders = [SnippetFolder(name: L("Generale"), snippets: flat)]
                 save()
                 return true
             }
@@ -98,10 +98,10 @@ final class SnippetStore {
         }
         // Primo avvio: cartella di esempio.
         folders = [
-            SnippetFolder(name: "Esempi", snippets: [
-                Snippet(title: "Email", content: "martin.trajkovski@dieffe.tech"),
-                Snippet(title: "Saluto", content: "Buongiorno,\n\ngrazie per il messaggio."),
-                Snippet(title: "Lorem", content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
+            SnippetFolder(name: L("Esempi"), snippets: [
+                Snippet(title: L("Email"), content: "martin.trajkovski@dieffe.tech"),
+                Snippet(title: L("Saluto"), content: L("Buongiorno,\n\ngrazie per il messaggio.")),
+                Snippet(title: L("Lorem"), content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.")
             ])
         ]
         save()
