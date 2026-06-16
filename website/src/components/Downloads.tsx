@@ -1,4 +1,5 @@
 import { DOWNLOADS, type OSId } from "../lib/config";
+import { useI18n } from "../i18n";
 
 export function Downloads({
   recommended,
@@ -7,12 +8,11 @@ export function Downloads({
   recommended: OSId | null;
   order: OSId[];
 }) {
+  const { t } = useI18n();
   return (
     <section id="download" className="section">
-      <h2 className="section-title">Scarica Klipski</h2>
-      <p className="section-sub">
-        Gratis e open source. Scegli la versione per il tuo sistema operativo.
-      </p>
+      <h2 className="section-title">{t.download.title}</h2>
+      <p className="section-sub">{t.download.sub}</p>
 
       <div className="download-grid">
         {order.map((id) => {
@@ -24,12 +24,12 @@ export function Downloads({
               id={`download-${id}`}
               className={`download-card${isRecommended ? " is-recommended" : ""}`}
             >
-              {isRecommended && <span className="badge">Consigliato per te</span>}
+              {isRecommended && <span className="badge">{t.download.recommended}</span>}
               <OSIcon os={id} />
               <h3>{dl.label}</h3>
-              <p className="dl-req">{dl.requirement}</p>
+              <p className="dl-req">{t.requirements[id]}</p>
               <a className="btn btn-primary btn-block" href={dl.url}>
-                Scarica <span className="btn-sub">{dl.format}</span>
+                {t.download.button} <span className="btn-sub">{dl.format}</span>
               </a>
             </article>
           );

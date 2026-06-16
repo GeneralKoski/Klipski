@@ -1,4 +1,5 @@
-import { SITE, type DownloadTarget, type OSId } from "../lib/config";
+import { type DownloadTarget, type OSId } from "../lib/config";
+import { fmt, useI18n } from "../i18n";
 
 const OS_LABEL: Record<OSId, string> = {
   macos: "macOS",
@@ -13,33 +14,34 @@ export function Hero({
   recommended: DownloadTarget | null;
   detected: OSId | null;
 }) {
+  const { t } = useI18n();
+
   return (
     <section className="hero">
-      <p className="eyebrow">Gratis · Open source · Nativo</p>
-      <h1>{SITE.tagline}</h1>
-      <p className="lede">{SITE.description}</p>
+      <p className="eyebrow">{t.hero.eyebrow}</p>
+      <h1>{t.hero.tagline}</h1>
+      <p className="lede">{t.hero.lede}</p>
 
       <div className="hero-cta">
         {recommended ? (
           <a className="btn btn-primary" href={recommended.url}>
-            Scarica per {OS_LABEL[recommended.id]}
+            {fmt(t.hero.downloadFor, { os: OS_LABEL[recommended.id] })}
             <span className="btn-sub">{recommended.format}</span>
           </a>
         ) : (
           <a className="btn btn-primary" href="#download">
-            Scarica Klipski
+            {t.hero.download}
           </a>
         )}
         <a className="btn btn-ghost" href="#download">
-          Altre piattaforme
+          {t.hero.otherPlatforms}
         </a>
       </div>
 
       {detected && (
         <p className="detect-note">
-          Abbiamo rilevato <strong>{OS_LABEL[detected]}</strong>. Non è il tuo
-          sistema?{" "}
-          <a href="#download">Scegli un'altra versione</a>.
+          {fmt(t.hero.detected, { os: OS_LABEL[detected] })}{" "}
+          <a href="#download">{t.hero.choose}</a>
         </p>
       )}
 
@@ -49,16 +51,16 @@ export function Hero({
         </div>
         <div className="hw-body">
           <div className="hw-side">
-            <p className="hw-group">Testi</p>
-            <p className="hw-item">Riunione lunedì alle 10:00</p>
+            <p className="hw-group">{t.mockup.text}</p>
+            <p className="hw-item">Lorem ipsum dolor sit amet</p>
             <p className="hw-item">https://klipski.app</p>
             <p className="hw-item active">npm install</p>
-            <p className="hw-group">Immagini</p>
+            <p className="hw-group">{t.mockup.images}</p>
             <p className="hw-item">screenshot-2026.png</p>
           </div>
           <div className="hw-main">
             <p className="hw-kbd">⌘⇧V</p>
-            <p>Apri ovunque la cronologia, incolla con un click.</p>
+            <p>{t.mockup.caption}</p>
           </div>
         </div>
       </div>

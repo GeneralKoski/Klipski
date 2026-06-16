@@ -12,7 +12,7 @@ export function SettingsView() {
     api.getSnippets().then(setFolders);
   }, []);
 
-  if (!settings) return <div className="settings">Caricamento…</div>;
+  if (!settings) return <div className="settings loading">Caricamento…</div>;
 
   function patch(p: Partial<Settings>) {
     setSettings((s) => (s ? { ...s, ...p } : s));
