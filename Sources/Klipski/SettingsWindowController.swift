@@ -159,8 +159,6 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         scroll.documentView = contentTextView
         content.addSubview(scroll)
 
-        content.addSubview(makeButton(L("Salva snippet"), frame: NSRect(x: 404, y: 38, width: 140, height: 26), action: #selector(saveSnippet)))
-
         // Collego i data source solo ora che entrambe le tabelle esistono
         // (setDataSource innesca subito numberOfRows, che le referenzia entrambe).
         foldersTable.dataSource = self
@@ -354,18 +352,6 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         foldersTable.reloadData()
         foldersTable.selectRowIndexes([folder], byExtendingSelection: false)
         clearEditor()
-    }
-
-    @objc private func saveSnippet() {
-        commitEditor()
-        if let folder = selectedFolder {
-            snippetsTable.reloadData()
-            foldersTable.reloadData()
-            foldersTable.selectRowIndexes([folder], byExtendingSelection: false)
-            if let s = editingSnippet {
-                snippetsTable.selectRowIndexes([s], byExtendingSelection: false)
-            }
-        }
     }
 
     private func prompt(message: String, placeholder: String) -> String? {
