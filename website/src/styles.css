@@ -323,6 +323,15 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
   white-space: nowrap;
 }
 [dir="rtl"] .badge { transform: translateX(50%); }
+.badge-soon { background: var(--muted); }
+.download-card.is-soon { opacity: 0.72; }
+.btn-disabled {
+  background: var(--bg-tint);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  cursor: not-allowed;
+}
+.btn-disabled:active { transform: none; }
 
 /* ---------- Footer ---------- */
 .footer { border-top: 1px solid var(--border); margin-top: 48px; background: var(--bg-tint); }

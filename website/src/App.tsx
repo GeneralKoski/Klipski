@@ -12,7 +12,7 @@ type Theme = "light" | "dark";
 function initialTheme(): Theme {
   const stored = localStorage.getItem("klipski-theme");
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "dark";
 }
 
 export default function App() {

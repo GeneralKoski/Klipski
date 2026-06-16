@@ -23,7 +23,7 @@ export function Hero({
       <p className="lede">{t.hero.lede}</p>
 
       <div className="hero-cta">
-        {recommended ? (
+        {recommended && recommended.available ? (
           <a className="btn btn-primary" href={recommended.url}>
             {fmt(t.hero.downloadFor, { os: OS_LABEL[recommended.id] })}
             <span className="btn-sub">{recommended.format}</span>

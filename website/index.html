@@ -8,11 +8,7 @@
       (function () {
         try {
           var t = localStorage.getItem("klipski-theme");
-          if (t !== "light" && t !== "dark") {
-            t = window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-          }
+          if (t !== "light" && t !== "dark") t = "dark";
           document.documentElement.dataset.theme = t;
         } catch (e) {}
       })();

@@ -22,15 +22,26 @@ export function Downloads({
             <article
               key={id}
               id={`download-${id}`}
-              className={`download-card${isRecommended ? " is-recommended" : ""}`}
+              className={`download-card${isRecommended ? " is-recommended" : ""}${
+                dl.available ? "" : " is-soon"
+              }`}
             >
-              {isRecommended && <span className="badge">{t.download.recommended}</span>}
+              {isRecommended && dl.available && (
+                <span className="badge">{t.download.recommended}</span>
+              )}
+              {!dl.available && <span className="badge badge-soon">{t.download.comingSoon}</span>}
               <OSIcon os={id} />
               <h3>{dl.label}</h3>
               <p className="dl-req">{t.requirements[id]}</p>
-              <a className="btn btn-primary btn-block" href={dl.url}>
-                {t.download.button} <span className="btn-sub">{dl.format}</span>
-              </a>
+              {dl.available ? (
+                <a className="btn btn-primary btn-block" href={dl.url}>
+                  {t.download.button} <span className="btn-sub">{dl.format}</span>
+                </a>
+              ) : (
+                <span className="btn btn-block btn-disabled" aria-disabled="true">
+                  {t.download.comingSoon}
+                </span>
+              )}
             </article>
           );
         })}

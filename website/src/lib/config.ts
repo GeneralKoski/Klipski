@@ -25,6 +25,8 @@ export interface DownloadTarget {
   url: string;
   // Requisiti minimi mostrati sotto al bottone.
   requirement: string;
+  // false = build non ancora disponibile ("Coming soon").
+  available: boolean;
 }
 
 export const DOWNLOADS: Record<OSId, DownloadTarget> = {
@@ -34,6 +36,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     format: ".dmg",
     url: env.VITE_DL_MACOS ?? "#download-macos",
     requirement: "macOS 14 (Sonoma) o superiore",
+    available: true,
   },
   windows: {
     id: "windows",
@@ -41,6 +44,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     format: ".msi",
     url: env.VITE_DL_WINDOWS ?? "#download-windows",
     requirement: "Windows 10 / 11 (64-bit)",
+    available: false,
   },
   linux: {
     id: "linux",
@@ -48,6 +52,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     format: ".AppImage",
     url: env.VITE_DL_LINUX ?? "#download-linux",
     requirement: "AppImage · distribuzioni glibc recenti",
+    available: false,
   },
 };
 
