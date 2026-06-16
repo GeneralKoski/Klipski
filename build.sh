@@ -81,6 +81,12 @@ EOF
 echo "▶ Firma ad-hoc..."
 codesign --force --deep --sign - "$APP"
 
+# In CI (INSTALL=0) ci si ferma al bundle firmato, senza installare né avviare.
+if [ "${INSTALL:-1}" != "1" ]; then
+    echo "✓ Bundle pronto: $APP (INSTALL=0, nessuna installazione)."
+    exit 0
+fi
+
 echo "▶ Installo in /Applications..."
 if [ -d "$DEST" ]; then
     # Chiudo eventuale istanza in esecuzione
