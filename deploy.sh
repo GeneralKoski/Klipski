@@ -51,4 +51,4 @@ npm run build
 
 echo "==> done."
 echo "    Sito:    https://klipski.martin-trajkovski.it"
-echo "    Release: build app in corso su GitHub Actions (release in bozza da pubblicare)"
+echo "    Release: build app in corso su GitHub Actions (verrà pubblicata automaticamente)"
