@@ -42,6 +42,9 @@ export function Downloads({
                   {t.download.comingSoon}
                 </span>
               )}
+              {dl.available && id === "macos" && (
+                <p className="dl-note">{t.download.macNote}</p>
+              )}
             </article>
           );
         })}

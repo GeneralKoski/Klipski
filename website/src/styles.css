@@ -305,6 +305,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
 .download-card h3 { margin: 6px 0 0; font-size: 21px; color: var(--text); font-weight: 700; }
 .download-card .btn { margin-top: 8px; }
 .dl-req { color: var(--muted); font-size: 13px; margin: 0 0 8px; min-height: 2.6em; }
+.dl-note { color: var(--muted); font-size: 12px; line-height: 1.4; margin: 10px 0 0; }
 .download-card.is-recommended {
   border-color: transparent;
   box-shadow: 0 0 0 2px var(--accent), var(--shadow);

@@ -17,7 +17,7 @@ export interface Dict {
   };
   mockup: { caption: string; text: string; images: string };
   features: { title: string; items: { title: string; body: string }[] };
-  download: { title: string; sub: string; recommended: string; button: string; comingSoon: string };
+  download: { title: string; sub: string; recommended: string; button: string; comingSoon: string; macNote: string };
   requirements: { macos: string; windows: string; linux: string };
   footer: { meta: string };
 }
@@ -60,7 +60,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Leggero e nativo", body: "Vive nella barra di stato, senza icona nel Dock e senza appesantire il sistema. Avvio automatico al login." },
       ],
     },
-    download: { title: "Scarica Klipski", sub: "Gratis e open source. Scegli la versione per il tuo sistema operativo.", recommended: "Consigliato per te", button: "Scarica", comingSoon: "In arrivo" },
+    download: { title: "Scarica Klipski", sub: "Gratis e open source. Scegli la versione per il tuo sistema operativo.", recommended: "Consigliato per te", button: "Scarica", comingSoon: "In arrivo", macNote: "Primo avvio bloccato? Impostazioni di Sistema → Privacy e Sicurezza → 'Apri comunque'." },
     requirements: { macos: "macOS 14 (Sonoma) o superiore", windows: "Windows 10 / 11 (64-bit)", linux: "AppImage · distribuzioni glibc recenti" },
     footer: { meta: "Open source · Versione {version} · macOS · Windows · Linux" },
   },
@@ -88,7 +88,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Lightweight & native", body: "Lives in the status bar, no Dock icon, easy on your system. Launches at login." },
       ],
     },
-    download: { title: "Download Klipski", sub: "Free and open source. Pick the version for your operating system.", recommended: "Recommended for you", button: "Download", comingSoon: "Coming soon" },
+    download: { title: "Download Klipski", sub: "Free and open source. Pick the version for your operating system.", recommended: "Recommended for you", button: "Download", comingSoon: "Coming soon", macNote: "First launch blocked? System Settings → Privacy & Security → 'Open Anyway'." },
     requirements: { macos: "macOS 14 (Sonoma) or later", windows: "Windows 10 / 11 (64-bit)", linux: "AppImage · recent glibc distributions" },
     footer: { meta: "Open source · Version {version} · macOS · Windows · Linux" },
   },
@@ -116,7 +116,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Ligero y nativo", body: "Vive en la barra de estado, sin icono en el Dock y sin sobrecargar el sistema. Se inicia al arrancar sesión." },
       ],
     },
-    download: { title: "Descargar Klipski", sub: "Gratis y de código abierto. Elige la versión para tu sistema operativo.", recommended: "Recomendado para ti", button: "Descargar", comingSoon: "Próximamente" },
+    download: { title: "Descargar Klipski", sub: "Gratis y de código abierto. Elige la versión para tu sistema operativo.", recommended: "Recomendado para ti", button: "Descargar", comingSoon: "Próximamente", macNote: "¿Bloqueado al abrir? Ajustes del Sistema → Privacidad y Seguridad → 'Abrir de todos modos'." },
     requirements: { macos: "macOS 14 (Sonoma) o posterior", windows: "Windows 10 / 11 (64 bits)", linux: "AppImage · distribuciones glibc recientes" },
     footer: { meta: "Código abierto · Versión {version} · macOS · Windows · Linux" },
   },
@@ -144,7 +144,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Léger et natif", body: "Vit dans la barre d'état, sans icône dans le Dock et sans alourdir le système. Démarrage automatique à l'ouverture de session." },
       ],
     },
-    download: { title: "Télécharger Klipski", sub: "Gratuit et open source. Choisissez la version pour votre système d'exploitation.", recommended: "Recommandé pour vous", button: "Télécharger", comingSoon: "Bientôt disponible" },
+    download: { title: "Télécharger Klipski", sub: "Gratuit et open source. Choisissez la version pour votre système d'exploitation.", recommended: "Recommandé pour vous", button: "Télécharger", comingSoon: "Bientôt disponible", macNote: "Bloqué au lancement ? Réglages Système → Confidentialité et sécurité → 'Ouvrir quand même'." },
     requirements: { macos: "macOS 14 (Sonoma) ou ultérieur", windows: "Windows 10 / 11 (64 bits)", linux: "AppImage · distributions glibc récentes" },
     footer: { meta: "Open source · Version {version} · macOS · Windows · Linux" },
   },
@@ -172,7 +172,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Leicht und nativ", body: "Lebt in der Statusleiste, ohne Dock-Symbol und ohne das System zu belasten. Startet beim Anmelden." },
       ],
     },
-    download: { title: "Klipski herunterladen", sub: "Kostenlos und Open Source. Wähle die Version für dein Betriebssystem.", recommended: "Für dich empfohlen", button: "Herunterladen", comingSoon: "Demnächst" },
+    download: { title: "Klipski herunterladen", sub: "Kostenlos und Open Source. Wähle die Version für dein Betriebssystem.", recommended: "Für dich empfohlen", button: "Herunterladen", comingSoon: "Demnächst", macNote: "Beim Start blockiert? Systemeinstellungen → Datenschutz & Sicherheit → 'Trotzdem öffnen'." },
     requirements: { macos: "macOS 14 (Sonoma) oder neuer", windows: "Windows 10 / 11 (64-Bit)", linux: "AppImage · aktuelle glibc-Distributionen" },
     footer: { meta: "Open Source · Version {version} · macOS · Windows · Linux" },
   },
@@ -200,7 +200,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Leve e nativo", body: "Vive na barra de status, sem ícone no Dock e sem pesar no sistema. Inicia ao fazer login." },
       ],
     },
-    download: { title: "Baixar Klipski", sub: "Grátis e de código aberto. Escolha a versão para o seu sistema operacional.", recommended: "Recomendado para você", button: "Baixar", comingSoon: "Em breve" },
+    download: { title: "Baixar Klipski", sub: "Grátis e de código aberto. Escolha a versão para o seu sistema operacional.", recommended: "Recomendado para você", button: "Baixar", comingSoon: "Em breve", macNote: "Bloqueado ao abrir? Ajustes do Sistema → Privacidade e Segurança → 'Abrir mesmo assim'." },
     requirements: { macos: "macOS 14 (Sonoma) ou superior", windows: "Windows 10 / 11 (64 bits)", linux: "AppImage · distribuições glibc recentes" },
     footer: { meta: "Código aberto · Versão {version} · macOS · Windows · Linux" },
   },
@@ -228,7 +228,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "Лёгкий и нативный", body: "Живёт в строке состояния, без значка в Dock и не нагружает систему. Запускается при входе в систему." },
       ],
     },
-    download: { title: "Скачать Klipski", sub: "Бесплатно и с открытым кодом. Выберите версию для вашей операционной системы.", recommended: "Рекомендуем вам", button: "Скачать", comingSoon: "Скоро" },
+    download: { title: "Скачать Klipski", sub: "Бесплатно и с открытым кодом. Выберите версию для вашей операционной системы.", recommended: "Рекомендуем вам", button: "Скачать", comingSoon: "Скоро", macNote: "Заблокировано при запуске? Системные настройки → Конфиденциальность и безопасность → 'Открыть всё равно'." },
     requirements: { macos: "macOS 14 (Sonoma) или новее", windows: "Windows 10 / 11 (64-бит)", linux: "AppImage · современные дистрибутивы glibc" },
     footer: { meta: "Открытый код · Версия {version} · macOS · Windows · Linux" },
   },
@@ -256,7 +256,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "軽量＆ネイティブ", body: "ステータスバーに常駐し、Dock アイコンなし、システムへの負荷も最小限。ログイン時に自動起動。" },
       ],
     },
-    download: { title: "Klipski をダウンロード", sub: "無料・オープンソース。お使いの OS のバージョンを選んでください。", recommended: "あなたへのおすすめ", button: "ダウンロード", comingSoon: "近日公開" },
+    download: { title: "Klipski をダウンロード", sub: "無料・オープンソース。お使いの OS のバージョンを選んでください。", recommended: "あなたへのおすすめ", button: "ダウンロード", comingSoon: "近日公開", macNote: "起動がブロックされた？システム設定 → プライバシーとセキュリティ →「このまま開く」。" },
     requirements: { macos: "macOS 14 (Sonoma) 以降", windows: "Windows 10 / 11 (64ビット)", linux: "AppImage · 新しめの glibc ディストリビューション" },
     footer: { meta: "オープンソース · バージョン {version} · macOS · Windows · Linux" },
   },
@@ -284,7 +284,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "轻量且原生", body: "常驻状态栏，无 Dock 图标，不拖慢系统。登录时自动启动。" },
       ],
     },
-    download: { title: "下载 Klipski", sub: "免费且开源。请选择适合你操作系统的版本。", recommended: "为你推荐", button: "下载", comingSoon: "即将推出" },
+    download: { title: "下载 Klipski", sub: "免费且开源。请选择适合你操作系统的版本。", recommended: "为你推荐", button: "下载", comingSoon: "即将推出", macNote: "首次打开被拦截？系统设置 → 隐私与安全性 →「仍要打开」。" },
     requirements: { macos: "macOS 14 (Sonoma) 或更高版本", windows: "Windows 10 / 11（64 位）", linux: "AppImage · 较新的 glibc 发行版" },
     footer: { meta: "开源 · 版本 {version} · macOS · Windows · Linux" },
   },
@@ -312,7 +312,7 @@ export const DICTS: Record<Lang, Dict> = {
         { title: "خفيف وأصلي", body: "يعيش في شريط الحالة، دون أيقونة في الـ Dock ودون إثقال النظام. يبدأ عند تسجيل الدخول." },
       ],
     },
-    download: { title: "تنزيل كليبسكي", sub: "مجاني ومفتوح المصدر. اختر الإصدار المناسب لنظام تشغيلك.", recommended: "موصى به لك", button: "تنزيل", comingSoon: "قريبًا" },
+    download: { title: "تنزيل كليبسكي", sub: "مجاني ومفتوح المصدر. اختر الإصدار المناسب لنظام تشغيلك.", recommended: "موصى به لك", button: "تنزيل", comingSoon: "قريبًا", macNote: "محظور عند أول فتح؟ إعدادات النظام ← الخصوصية والأمان ← 'افتح على أي حال'." },
     requirements: { macos: "macOS 14 (Sonoma) أو أحدث", windows: "Windows 10 / 11 (64 بت)", linux: "AppImage · توزيعات glibc الحديثة" },
     footer: { meta: "مفتوح المصدر · الإصدار {version} · macOS · Windows · Linux" },
   },
