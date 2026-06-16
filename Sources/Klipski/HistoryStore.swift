@@ -10,6 +10,7 @@ struct ClipItem: Codable, Identifiable {
     var imageFile: String?
     var hash: Int
     let createdAt: Date
+    var concealed: Bool?
 
     var rtfData: Data? {
         guard let rtfBase64 else { return nil }
@@ -43,14 +44,14 @@ final class HistoryStore {
 
     // MARK: - Add
 
-    func addText(_ text: String, rtf: Data? = nil) {
+    func addText(_ text: String, rtf: Data? = nil, concealed: Bool = false) {
         let trimmed = text
         guard !trimmed.isEmpty else { return }
         let h = HistoryStore.stableHash(Array(trimmed.utf8))
         items.removeAll { $0.kind == .text && $0.hash == h && $0.text == trimmed }
         let item = ClipItem(id: UUID(), kind: .text, text: trimmed,
                             rtfBase64: rtf?.base64EncodedString(), imageFile: nil,
-                            hash: h, createdAt: Date())
+                            hash: h, createdAt: Date(), concealed: concealed)
         items.insert(item, at: 0)
         trim()
         save()

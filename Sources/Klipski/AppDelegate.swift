@@ -56,6 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
+        clipboard.onChange = { [weak self] in self?.flashCapture() }
         clipboard.start()
 
         let code = UInt32(defaults.integer(forKey: hotKeyCodeKey))
@@ -92,6 +93,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return true
         }
         image.isTemplate = true
+        return image
+    }
+
+    /// Lampo discreto dell'icona nella barra di stato alla cattura di un nuovo elemento.
+    private func flashCapture() {
+        guard let button = statusItem.button else { return }
+        button.image = AppDelegate.statusBarIconFilled()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { [weak self] in
+            self?.statusItem.button?.image = AppDelegate.statusBarIcon()
+        }
+    }
+
+    /// Variante piena (non-template) usata per il lampo di conferma.
+    private static func statusBarIconFilled() -> NSImage {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let circle = NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5))
+            NSColor.white.setFill()
+            circle.fill()
+            let style = NSMutableParagraphStyle()
+            style.alignment = .center
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 12, weight: .bold),
+                .foregroundColor: NSColor.black,
+                .paragraphStyle: style
+            ]
+            let letter = "K" as NSString
+            let textSize = letter.size(withAttributes: attrs)
+            let point = NSPoint(x: 0, y: (rect.height - textSize.height) / 2)
+            letter.draw(in: NSRect(x: point.x, y: point.y, width: rect.width, height: textSize.height),
+                        withAttributes: attrs)
+            return true
+        }
+        image.isTemplate = false
         return image
     }
 
@@ -195,6 +230,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for (index, item) in entries {
                 guard let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) else { continue }
                 let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                menuItem.attributedTitle = titleWithTimestamp("Immagine", date: item.createdAt)
                 menuItem.target = self
                 menuItem.tag = index
                 menuItem.image = thumbnail(image)
@@ -209,9 +245,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func makeHistoryItem(_ item: ClipItem, index: Int) -> NSMenuItem {
         switch item.kind {
         case .text:
+            // Elemento riservato (es. password da un password manager): titolo oscurato,
+            // ma il contenuto reale resta e si incolla normalmente.
+            if item.concealed == true {
+                let masked = maskedTitle(item.text ?? "")
+                let menuItem = NSMenuItem(title: masked, action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+                menuItem.attributedTitle = titleWithTimestamp(masked, date: item.createdAt)
+                menuItem.target = self
+                menuItem.tag = index
+                return menuItem
+            }
             // Testo con formattazione: sottomenu con la scelta. Altrimenti click singolo.
             if item.rtfData != nil {
                 let parent = NSMenuItem(title: truncate(item.text ?? ""), action: nil, keyEquivalent: "")
+                parent.attributedTitle = titleWithTimestamp(truncate(item.text ?? ""), date: item.createdAt)
                 let submenu = NSMenu()
                 let formatted = NSMenuItem(title: "Incolla con formattazione", action: #selector(selectTextFormatted(_:)), keyEquivalent: "")
                 formatted.target = self
@@ -225,11 +272,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 return parent
             }
             let menuItem = NSMenuItem(title: truncate(item.text ?? ""), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+            menuItem.attributedTitle = titleWithTimestamp(truncate(item.text ?? ""), date: item.createdAt)
             menuItem.target = self
             menuItem.tag = index
             return menuItem
         case .image:
             let menuItem = NSMenuItem(title: "Immagine", action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
+            menuItem.attributedTitle = titleWithTimestamp("Immagine", date: item.createdAt)
             menuItem.target = self
             menuItem.tag = index
             if let url = history.imageURL(for: item), let image = NSImage(contentsOf: url) {
@@ -317,14 +366,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             return
         }
         autoPaste = true
-        if !Paster.ensureAccessibility(prompt: true) {
-            let alert = NSAlert()
-            alert.messageText = "Permesso Accessibilità richiesto"
-            alert.informativeText = "Per incollare automaticamente (Cmd+V), abilita Klipski in Impostazioni di Sistema → Privacy e sicurezza → Accessibilità, poi riavvia Klipski. Senza il permesso l'elemento verrà solo copiato negli appunti."
-            alert.addButton(withTitle: "OK")
-            NSApp.activate(ignoringOtherApps: true)
-            alert.runModal()
-        }
+        Paster.ensureAccessibility(prompt: true)
     }
 
     @objc private func toggleLogin() {
@@ -462,6 +504,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                    operation: .copy, fraction: 1.0)
         thumb.unlockFocus()
         return thumb
+    }
+
+    private static let relativeFormatter: RelativeDateTimeFormatter = {
+        let f = RelativeDateTimeFormatter()
+        f.unitsStyle = .short
+        return f
+    }()
+
+    /// Titolo con il tempo trascorso (grigio, più piccolo) in coda.
+    private func titleWithTimestamp(_ text: String, date: Date) -> NSAttributedString {
+        let result = NSMutableAttributedString(string: text, attributes: [
+            .font: NSFont.menuFont(ofSize: 0)
+        ])
+        let elapsed = Date().timeIntervalSince(date)
+        let relative = elapsed < 3 ? "adesso" : AppDelegate.relativeFormatter.localizedString(for: date, relativeTo: Date())
+        let stamp = "   " + relative
+        result.append(NSAttributedString(string: stamp, attributes: [
+            .font: NSFont.menuFont(ofSize: NSFont.smallSystemFontSize),
+            .foregroundColor: NSColor.secondaryLabelColor
+        ]))
+        return result
+    }
+
+    /// Oscura un elemento riservato lasciando la prima e l'ultima lettera come riferimento.
+    private func maskedTitle(_ text: String) -> String {
+        let count = text.count
+        guard count > 2 else { return String(repeating: "•", count: max(count, 1)) }
+        let first = text.prefix(1)
+        let last = text.suffix(1)
+        let dots = String(repeating: "•", count: min(count - 2, 10))
+        return "\(first)\(dots)\(last)"
     }
 
     private func truncate(_ text: String, max: Int = 50) -> String {

@@ -15,7 +15,7 @@ final class ClipboardManager {
     }
 
     func start() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.poll() }
         }
     }
@@ -52,6 +52,13 @@ final class ClipboardManager {
         capture()
     }
 
+    private func isConcealed() -> Bool {
+        guard let types = pasteboard.types else { return false }
+        let concealed = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
+        let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
+        return types.contains(concealed) || types.contains(transient)
+    }
+
     private func capture() {
         // 1. File immagine copiato dal Finder (es. screenshot sul Desktop):
         // sostituisce sempre il file negli appunti con l'immagine vera,
@@ -65,7 +72,9 @@ final class ClipboardManager {
         // 2. Testo (con RTF se la sorgente lo fornisce, per poter incollare con formattazione).
         if let str = pasteboard.string(forType: .string),
            !str.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            history.addText(str, rtf: pasteboard.data(forType: .rtf))
+            let concealed = isConcealed()
+            // Le password (concealed) non hanno formattazione utile: niente RTF.
+            history.addText(str, rtf: concealed ? nil : pasteboard.data(forType: .rtf), concealed: concealed)
             onChange?()
             return
         }
