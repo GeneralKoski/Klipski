@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy del sito Klipski su klipski.martin-trajkovski.it
 # Pull da GitHub, build della website e pubblicazione (Nginx serve website/dist/).
-set -euo pipefail
+set -eu
 
 REPO_DIR="/srv/apps/Klipski"
 WEB_DIR="$REPO_DIR/website"
