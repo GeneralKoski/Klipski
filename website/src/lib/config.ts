@@ -3,6 +3,14 @@
 // via variabili d'ambiente VITE_DL_* in fase di build.
 const env = import.meta.env;
 
+// Iniettata da Vite (define) a partire da npm_package_version (package.json).
+declare const __APP_VERSION__: string;
+const VERSION = __APP_VERSION__;
+
+// URL di un asset della release corrispondente alla versione del sito.
+const ghAsset = (file: string) =>
+  `https://github.com/GeneralKoski/Klipski/releases/download/v${VERSION}/${file}`;
+
 export const SITE = {
   name: "Klipski",
   tagline: "Il gestore di appunti che mancava al tuo computer",
@@ -10,7 +18,7 @@ export const SITE = {
     "Klipski è un clipboard manager leggero e nativo: cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico. Gratis e open source per macOS, Windows e Linux.",
   url: "https://klipski.martin-trajkovski.it",
   repo: "https://github.com/GeneralKoski/Klipski",
-  version: env.VITE_APP_VERSION ?? "1.0.0",
+  version: VERSION,
   author: "Klipski",
 };
 
@@ -34,7 +42,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     id: "macos",
     label: "macOS",
     format: ".dmg",
-    url: env.VITE_DL_MACOS || "https://github.com/GeneralKoski/Klipski/releases/latest/download/Klipski-macos.dmg",
+    url: env.VITE_DL_MACOS || ghAsset(`Klipski_${VERSION}.dmg`),
     requirement: "macOS 14 (Sonoma) o superiore",
     available: true,
   },
@@ -42,7 +50,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     id: "windows",
     label: "Windows",
     format: ".msi",
-    url: env.VITE_DL_WINDOWS || "https://github.com/GeneralKoski/Klipski/releases/latest/download/Klipski-windows.msi",
+    url: env.VITE_DL_WINDOWS || ghAsset(`Klipski_${VERSION}_x64_en-US.msi`),
     requirement: "Windows 10 / 11 (64-bit)",
     available: true,
   },
@@ -50,7 +58,7 @@ export const DOWNLOADS: Record<OSId, DownloadTarget> = {
     id: "linux",
     label: "Linux",
     format: ".AppImage",
-    url: env.VITE_DL_LINUX || "https://github.com/GeneralKoski/Klipski/releases/latest/download/Klipski-linux.AppImage",
+    url: env.VITE_DL_LINUX || ghAsset(`Klipski_${VERSION}_amd64.AppImage`),
     requirement: "AppImage · distribuzioni glibc recenti",
     available: true,
   },

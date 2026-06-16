@@ -17,12 +17,8 @@ jobs:
         include:
           - platform: ubuntu-22.04
             args: ""
-            bundleGlob: "desktop/src-tauri/target/release/bundle/appimage/*.AppImage"
-            assetName: "Klipski-linux.AppImage"
           - platform: windows-latest
             args: ""
-            bundleGlob: "desktop/src-tauri/target/release/bundle/msi/*_en-US.msi"
-            assetName: "Klipski-windows.msi"
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -54,22 +50,15 @@ jobs:
         run: npm ci
 
       - uses: tauri-apps/tauri-action@v0
-        with:
-          projectPath: desktop
-          args: ${{ matrix.args }}
-
-      - name: Rinomina l'installer con nome stabile
-        shell: bash
-        run: cp "$(ls ${{ matrix.bundleGlob }} | head -n1)" "${{ matrix.assetName }}"
-
-      - name: Carica nella release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          draft: false
-          files: ${{ matrix.assetName }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "Klipski ${{ github.ref_name }}"
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
 
   # macOS: app Swift nativa esistente.
   macos:
@@ -83,15 +72,16 @@ jobs:
 
       - name: Crea il DMG
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
           hdiutil create -volname Klipski \
             -srcfolder Klipski.app \
-            -ov -format UDZO Klipski-macos.dmg
+            -ov -format UDZO "Klipski_${VERSION}.dmg"
 
       - name: Carica nella release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           draft: false
-          files: Klipski-macos.dmg
+          files: Klipski_*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
