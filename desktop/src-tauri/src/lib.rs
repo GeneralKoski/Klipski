@@ -313,6 +313,7 @@ fn apply_snippet(app: AppHandle, state: State<'_, AppState>, content: String) {
         let _ = win.hide();
     }
     set_clipboard_text(&app, &content);
+    record_text(&app, content);
     maybe_paste(&app);
 }
 

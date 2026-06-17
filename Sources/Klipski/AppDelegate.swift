@@ -358,7 +358,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         guard parts.count == 2,
               snippets.folders.indices.contains(parts[0]),
               snippets.folders[parts[0]].snippets.indices.contains(parts[1]) else { return }
-        clipboard.setText(snippets.folders[parts[0]].snippets[parts[1]].content)
+        let content = snippets.folders[parts[0]].snippets[parts[1]].content
+        clipboard.setText(content)
+        history.addText(content, rtf: nil, concealed: false)
         pasteIfNeeded()
     }
 
