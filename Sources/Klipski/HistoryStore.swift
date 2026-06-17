@@ -60,9 +60,11 @@ final class HistoryStore {
     func addImage(_ data: Data) {
         let h = HistoryStore.stableHash(data)
         if let existing = items.first(where: { $0.kind == .image && $0.hash == h }) {
-            // già presente: spostalo in cima
+            // già presente: spostalo in cima aggiornando il timestamp
             items.removeAll { $0.id == existing.id }
-            items.insert(existing, at: 0)
+            let refreshed = ClipItem(id: existing.id, kind: .image, text: nil, rtfBase64: nil,
+                                     imageFile: existing.imageFile, hash: existing.hash, createdAt: Date())
+            items.insert(refreshed, at: 0)
             save()
             return
         }
