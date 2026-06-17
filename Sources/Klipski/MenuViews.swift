@@ -96,11 +96,18 @@ final class ImageMenuHighlightDelegate: NSObject, NSMenuDelegate {
         hidePreview()
         guard let image = NSImage(contentsOf: url) else { return }
 
-        let maxSide: CGFloat = 360
-        let s = image.size
-        let scale = min(maxSide / max(s.width, 1), maxSide / max(s.height, 1), 1)
-        let imgSize = NSSize(width: max(s.width * scale, 1), height: max(s.height * scale, 1))
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
+        let vf = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 800, height: 800)
+
+        // Si adatta allo schermo: usa fino al 90% del lato più corto dell'area
+        // visibile, così l'anteprima resta sempre contenuta in entrambe le dimensioni.
         let inset: CGFloat = 8
+        let maxSide = min(vf.width, vf.height) * 0.90
+        let s = image.size
+        // Permette anche l'ingrandimento (fino a 3x) per le immagini piccole.
+        let scale = min(maxSide / max(s.width, 1), maxSide / max(s.height, 1), 3)
+        let imgSize = NSSize(width: max(s.width * scale, 1), height: max(s.height * scale, 1))
         let winSize = NSSize(width: imgSize.width + inset * 2, height: imgSize.height + inset * 2)
 
         let container = NSView(frame: NSRect(origin: .zero, size: winSize))
@@ -113,11 +120,11 @@ final class ImageMenuHighlightDelegate: NSObject, NSMenuDelegate {
         let imageView = NSImageView(frame: NSRect(x: inset, y: inset, width: imgSize.width, height: imgSize.height))
         imageView.image = image
         imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.wantsLayer = true
+        imageView.layer?.minificationFilter = .trilinear
+        imageView.layer?.magnificationFilter = .trilinear
         container.addSubview(imageView)
 
-        let mouse = NSEvent.mouseLocation
-        let screen = NSScreen.screens.first { $0.frame.contains(mouse) } ?? NSScreen.main
-        let vf = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: winSize.width, height: winSize.height)
         let originX = vf.midX - winSize.width / 2
         let originY = vf.midY - winSize.height / 2
 
