@@ -109,6 +109,12 @@ final class MenuArrowWrapField: NSView, NSTextFieldDelegate {
         }
     }
 
+    /// Riprende il focus se non ce l'ha già (il campo è a fuoco quando ha un field editor).
+    func grabFocus() {
+        guard let window, field.currentEditor() == nil else { return }
+        window.makeFirstResponder(field)
+    }
+
     private func selectableItems(in menu: NSMenu) -> [NSMenuItem] {
         menu.items.filter { $0.isEnabled && !$0.isSeparatorItem && $0.view == nil }
     }
@@ -143,11 +149,35 @@ final class MenuArrowWrapField: NSView, NSTextFieldDelegate {
         return false
     }
 
+    /// Rilascia il focus dal campo e rilancia il tasto al menu, così la gestione
+    /// nativa (apertura sottomenu / attivazione voce) torna a funzionare.
+    private func forwardToMenu(keyCode: UInt16) {
+        let win = window
+        win?.makeFirstResponder(nil)
+        DispatchQueue.main.async {
+            if let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                            timestamp: ProcessInfo.processInfo.systemUptime,
+                                            windowNumber: win?.windowNumber ?? 0, context: nil,
+                                            characters: "", charactersIgnoringModifiers: "",
+                                            isARepeat: false, keyCode: keyCode) {
+                NSApp.postEvent(event, atStart: true)
+            }
+        }
+    }
+
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
         if commandSelector == #selector(NSResponder.moveDown(_:)), wrapIfNeeded(forward: true) {
             return true
         }
         if commandSelector == #selector(NSResponder.moveUp(_:)), wrapIfNeeded(forward: false) {
+            return true
+        }
+        if commandSelector == #selector(NSResponder.moveRight(_:)) {
+            forwardToMenu(keyCode: 124) // freccia destra → apre il sottomenu
+            return true
+        }
+        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+            forwardToMenu(keyCode: 36) // invio → attiva la voce / apre il sottomenu
             return true
         }
         return false

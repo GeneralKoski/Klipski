@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let imageMenuDelegate = ImageMenuHighlightDelegate()
 
     private weak var highlightedMainItem: NSMenuItem?
+    private weak var wrapField: MenuArrowWrapField?
 
     private let defaults = UserDefaults.standard
     private let autoPasteKey = "autoPaste"
@@ -144,6 +145,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
         guard menu === self.menu else { return }
         highlightedMainItem = item
+        // Tornati a navigare il menu principale (es. dopo essere usciti da un
+        // sottomenu), il campo riprende il focus così il wrap su/giù continua a funzionare.
+        DispatchQueue.main.async { [weak self] in self?.wrapField?.grabFocus() }
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
@@ -153,6 +157,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let wrapItem = NSMenuItem()
         let wrapField = MenuArrowWrapField(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
         wrapField.highlightedItem = { [weak self] in self?.highlightedMainItem }
+        self.wrapField = wrapField
         wrapItem.view = wrapField
         menu.addItem(wrapItem)
 
