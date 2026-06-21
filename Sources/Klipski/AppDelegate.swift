@@ -13,6 +13,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var settingsController: SettingsWindowController?
     private let imageMenuDelegate = ImageMenuHighlightDelegate()
 
+    private weak var highlightedMainItem: NSMenuItem?
+
     private let defaults = UserDefaults.standard
     private let autoPasteKey = "autoPaste"
     private let textLimitKey = "textLimit"
@@ -137,8 +139,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.performClick(nil)
     }
 
+    // Wrap su/giù nel menu principale: il campo invisibile in cima cattura le frecce
+    // e qui teniamo traccia della voce evidenziata.
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        guard menu === self.menu else { return }
+        highlightedMainItem = item
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
+        highlightedMainItem = nil
+
+        let wrapItem = NSMenuItem()
+        let wrapField = MenuArrowWrapField(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+        wrapField.highlightedItem = { [weak self] in self?.highlightedMainItem }
+        wrapItem.view = wrapField
+        menu.addItem(wrapItem)
 
         menu.addItem(makeTextMenu())
         menu.addItem(makeImageMenu())
@@ -148,10 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.separator())
 
         let autoActive = autoPaste && Paster.isTrusted
-        let autoTitle = (autoPaste && !Paster.isTrusted)
-            ? L("Incolla automaticamente (manca permesso Accessibilità)")
-            : L("Incolla automaticamente")
-        let autoItem = NSMenuItem(title: autoTitle, action: #selector(toggleAutoPaste), keyEquivalent: "")
+        let autoItem = NSMenuItem(title: L("Incolla automaticamente"), action: #selector(toggleAutoPaste), keyEquivalent: "")
         autoItem.target = self
         autoItem.state = autoActive ? .on : .off
         menu.addItem(autoItem)

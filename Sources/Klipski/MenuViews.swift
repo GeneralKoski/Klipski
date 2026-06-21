@@ -74,6 +74,86 @@ final class MenuSearchField: NSView, NSSearchFieldDelegate {
     }
 }
 
+/// Campo invisibile messo come prima voce del menu principale: cattura le frecce
+/// su/giù (via field editor) per far rimbalzare l'evidenziazione agli estremi.
+/// Il menu nativo non inoltra i tasti a event monitor, ma li passa al first responder.
+@MainActor
+final class MenuArrowWrapField: NSView, NSTextFieldDelegate {
+    private let field = NSTextField()
+    /// Fornita dall'esterno: la voce attualmente evidenziata nel menu.
+    var highlightedItem: (() -> NSMenuItem?)?
+    /// Evidenziazione vista al keystroke precedente, per capire se ci si è spostati.
+    private weak var previousHighlight: NSMenuItem?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        field.frame = bounds
+        field.isBordered = false
+        field.isBezeled = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.isEditable = true
+        field.delegate = self
+        field.alphaValue = 0
+        addSubview(field)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard window != nil else { return }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.window?.makeFirstResponder(self.field)
+        }
+    }
+
+    private func selectableItems(in menu: NSMenu) -> [NSMenuItem] {
+        menu.items.filter { $0.isEnabled && !$0.isSeparatorItem && $0.view == nil }
+    }
+
+    private func highlight(_ item: NSMenuItem, in menu: NSMenu) {
+        let selector = NSSelectorFromString("highlightItem:")
+        guard menu.responds(to: selector) else { return }
+        menu.perform(selector, with: item)
+    }
+
+    private func wrapIfNeeded(forward: Bool) -> Bool {
+        guard let menu = enclosingMenuItem?.menu else { return false }
+        let items = selectableItems(in: menu)
+        guard let first = items.first, let last = items.last else { return false }
+        // Il menu nativo sposta l'evidenziazione PRIMA di chiamarci: confrontiamo con
+        // il keystroke precedente per wrappare solo quando si è già fermi all'estremo
+        // (evidenziazione invariata), così non si "salta" l'ultima/prima voce.
+        let current = highlightedItem?()
+        let moved = current !== previousHighlight
+        previousHighlight = current
+        guard current != nil else { return false }
+        if forward, current === last, !moved {
+            highlight(first, in: menu)
+            previousHighlight = first
+            return true
+        }
+        if !forward, current === first, !moved {
+            highlight(last, in: menu)
+            previousHighlight = last
+            return true
+        }
+        return false
+    }
+
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        if commandSelector == #selector(NSResponder.moveDown(_:)), wrapIfNeeded(forward: true) {
+            return true
+        }
+        if commandSelector == #selector(NSResponder.moveUp(_:)), wrapIfNeeded(forward: false) {
+            return true
+        }
+        return false
+    }
+}
+
 /// Delegate del sottomenu Immagini: mostra un'anteprima ingrandita dell'immagine
 /// evidenziata (sia col mouse sia con le frecce), accanto al cursore.
 @MainActor
