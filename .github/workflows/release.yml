@@ -2,6 +2,7 @@ name: Release
 
 on:
   push:
+    branches: ["main"]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -9,8 +10,42 @@ permissions:
   contents: write
 
 jobs:
+  # Decide se rilasciare e con quale tag.
+  # - push di un tag v*      → rilascia con quel tag.
+  # - push su main / manuale → legge la versione da tauri.conf.json e rilascia
+  #                            solo se il tag corrispondente non esiste già
+  #                            (cioè quando hai bumpato la versione).
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.decide.outputs.release }}
+      tag: ${{ steps.decide.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determina tag e se rilasciare
+        id: decide
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            TAG="$GITHUB_REF_NAME"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(jq -r .version desktop/src-tauri/tauri.conf.json)
+            TAG="v$VERSION"
+            if git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
+              echo "Tag $TAG già esistente: nessun rilascio."
+              echo "release=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "Nuova versione $TAG: rilascio."
+              echo "release=true" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
   # Windows e Linux: client Tauri (desktop/).
   desktop:
+    needs: check
+    if: needs.check.outputs.release == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -54,33 +89,36 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: ${{ github.ref_name }}
-          releaseName: "Klipski ${{ github.ref_name }}"
+          tagName: ${{ needs.check.outputs.tag }}
+          releaseName: "Klipski ${{ needs.check.outputs.tag }}"
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
   # macOS: app Swift nativa esistente.
   macos:
-    needs: desktop
+    needs: [check, desktop]
+    if: needs.check.outputs.release == 'true'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
       - name: Compila e assembla il bundle (senza installare)
-        run: INSTALL=0 ./build.sh
+        run: GITHUB_REF_NAME="${{ needs.check.outputs.tag }}" INSTALL=0 ./build.sh
 
       - name: Crea il DMG
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG#v}"
           hdiutil create -volname Klipski \
             -srcfolder Klipski.app \
             -ov -format UDZO "Klipski_${VERSION}.dmg"
+        env:
+          TAG: ${{ needs.check.outputs.tag }}
 
       - name: Carica nella release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.check.outputs.tag }}
           draft: false
           files: Klipski_*.dmg
         env:
