@@ -3,7 +3,12 @@ set -euo pipefail
 
 APP_NAME="Klipski"
 BUNDLE_ID="com.klipski.app"
-VERSION="1.0.0"
+# In CI usa la versione dal tag (es. v1.0.6 → 1.0.6); in locale il default.
+if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
+    VERSION="${GITHUB_REF_NAME#v}"
+else
+    VERSION="1.0.6"
+fi
 APP="$APP_NAME.app"
 DEST="/Applications/$APP"
 
