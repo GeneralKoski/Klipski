@@ -18,7 +18,6 @@ export function Hero({
 
   return (
     <section className="hero">
-      <p className="eyebrow">{t.hero.eyebrow}</p>
       <h1>{t.hero.tagline}</h1>
       <p className="lede">{t.hero.lede}</p>
 

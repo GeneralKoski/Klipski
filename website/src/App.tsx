@@ -19,11 +19,10 @@ export default function App() {
   const { t, lang, setLang } = useI18n();
   const [detected, setDetected] = useState<OSId | null>(null);
   const [hidden, setHidden] = useState(false);
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     setDetected(detectOS());
-    setTheme(initialTheme());
   }, []);
 
   useEffect(() => {
