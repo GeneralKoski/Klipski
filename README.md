@@ -108,4 +108,4 @@ I link di download sono configurabili: copia `.env.example` in `.env` e imposta 
 ## Release & deploy (CI)
 
 - **`.github/workflows/release.yml`** - al push di un tag `v*` compila i binari Tauri per Windows/Linux (`tauri-action`) e il DMG macOS (`INSTALL=0 ./build.sh`), caricandoli in una GitHub Release in bozza.
-- **`.github/workflows/website.yml`** - al push su `main` builda e pubblica il sito su GitHub Pages.
+- **Sito**: deploy manuale via `deploy.sh` (pull + build, servito da Nginx sul server). GitHub Pages dismesso.
