@@ -3,12 +3,6 @@
 .DS_Store
 Package.resolved
 
-# Tauri client (desktop/)
-desktop/node_modules/
-desktop/dist/
-desktop/src-tauri/target/
-desktop/src-tauri/gen/schemas/
-
 # Website
 website/node_modules/
 website/dist/

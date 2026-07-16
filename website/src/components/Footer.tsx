@@ -9,7 +9,6 @@ export function Footer() {
         <p className="footer-brand">{SITE.name}</p>
         <nav className="footer-nav">
           <a href="#features">{t.nav.features}</a>
-          <a href="#download">{t.nav.download}</a>
           <a href={SITE.repo} target="_blank" rel="noreferrer noopener">
             GitHub
           </a>

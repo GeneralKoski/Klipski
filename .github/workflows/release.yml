@@ -12,9 +12,9 @@ permissions:
 jobs:
   # Decide se rilasciare e con quale tag.
   # - push di un tag v*      → rilascia con quel tag.
-  # - push su main / manuale → legge la versione da tauri.conf.json e rilascia
-  #                            solo se il tag corrispondente non esiste già
-  #                            (cioè quando hai bumpato la versione).
+  # - push su main / manuale → legge la versione da website/package.json e
+  #                            rilascia solo se il tag corrispondente non esiste
+  #                            già (cioè quando hai bumpato la versione).
   check:
     runs-on: ubuntu-latest
     outputs:
@@ -30,7 +30,7 @@ jobs:
             TAG="$GITHUB_REF_NAME"
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
-            VERSION=$(jq -r .version desktop/src-tauri/tauri.conf.json)
+            VERSION=$(jq -r .version website/package.json)
             TAG="v$VERSION"
             if git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
               echo "Tag $TAG già esistente: nessun rilascio."
@@ -42,62 +42,9 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-  # Windows e Linux: client Tauri (desktop/).
-  desktop:
-    needs: check
-    if: needs.check.outputs.release == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: ubuntu-22.04
-            args: ""
-          - platform: windows-latest
-            args: ""
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: desktop/src-tauri
-
-      - name: Dipendenze Linux
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libxdo-dev \
-            patchelf
-
-      - name: Installa dipendenze frontend
-        working-directory: desktop
-        run: npm ci
-
-      - uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: desktop
-          tagName: ${{ needs.check.outputs.tag }}
-          releaseName: "Klipski ${{ needs.check.outputs.tag }}"
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.args }}
-
-  # macOS: app Swift nativa esistente.
+  # macOS: app Swift nativa.
   macos:
-    needs: [check, desktop]
+    needs: check
     if: needs.check.outputs.release == 'true'
     runs-on: macos-15
     steps:

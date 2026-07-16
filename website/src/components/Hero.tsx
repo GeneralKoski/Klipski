@@ -1,19 +1,7 @@
-import { type DownloadTarget, type OSId } from "../lib/config";
-import { fmt, useI18n } from "../i18n";
+import { MACOS_DOWNLOAD } from "../lib/config";
+import { useI18n } from "../i18n";
 
-const OS_LABEL: Record<OSId, string> = {
-  macos: "macOS",
-  windows: "Windows",
-  linux: "Linux",
-};
-
-export function Hero({
-  recommended,
-  detected,
-}: {
-  recommended: DownloadTarget | null;
-  detected: OSId | null;
-}) {
+export function Hero() {
   const { t } = useI18n();
 
   return (
@@ -22,27 +10,11 @@ export function Hero({
       <p className="lede">{t.hero.lede}</p>
 
       <div className="hero-cta">
-        {recommended && recommended.available ? (
-          <a className="btn btn-primary" href={recommended.url}>
-            {fmt(t.hero.downloadFor, { os: OS_LABEL[recommended.id] })}
-            <span className="btn-sub">{recommended.format}</span>
-          </a>
-        ) : (
-          <a className="btn btn-primary" href="#download">
-            {t.hero.download}
-          </a>
-        )}
-        <a className="btn btn-ghost" href="#download">
-          {t.hero.otherPlatforms}
+        <a className="btn btn-primary" href={MACOS_DOWNLOAD.url}>
+          {t.hero.download}
+          <span className="btn-sub">{MACOS_DOWNLOAD.format}</span>
         </a>
       </div>
-
-      {detected && (
-        <p className="detect-note">
-          {fmt(t.hero.detected, { os: OS_LABEL[detected] })}{" "}
-          <a href="#download">{t.hero.choose}</a>
-        </p>
-      )}
 
       <div className="hero-window" aria-hidden="true">
         <div className="hw-bar">

@@ -1,9 +1,8 @@
 # Klipski
 
-Clipboard manager. Tre componenti nello stesso repo:
+Clipboard manager. Due componenti nello stesso repo:
 
 - `Sources/Klipski/` - app macOS nativa (Swift/AppKit), build con `./build.sh`.
-- `desktop/` - client Windows/Linux (Tauri + React).
 - `website/` - sito di presentazione (Vite + React), dominio `klipski.martin-trajkovski.it`.
 
 ## Release (importante)
@@ -13,16 +12,13 @@ Il rilascio è **automatico al bump di versione**, gestito da `.github/workflows
 Flusso per pubblicare una nuova versione:
 
 1. Fai le modifiche.
-2. **Bump della versione** in tutti e tre i file (tenerli allineati):
-   - `desktop/src-tauri/tauri.conf.json`
-   - `desktop/package.json`
-   - `website/package.json`
+2. **Bump della versione** in `website/package.json`.
 3. Committa includendo il bump.
 4. L'utente fa `git push origin main` (il push lo fa sempre l'utente: a Claude i `git push` sono bloccati dai permessi).
 
-Il workflow legge la versione da `tauri.conf.json` e, se il tag `vX.Y.Z` non esiste
-ancora, lo crea da solo e pubblica la GitHub Release con DMG macOS + binari
-Windows/Linux. **Non creare il tag a mano.**
+Il workflow legge la versione da `website/package.json` e, se il tag `vX.Y.Z`
+non esiste ancora, lo crea da solo e pubblica la GitHub Release con il DMG
+macOS. **Non creare il tag a mano.**
 
 - Push su `main` **senza** bump di versione → nessuna release (il job `check` esce con `release=false`).
 - Il push di un tag `v*` a mano resta supportato come prima.

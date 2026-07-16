@@ -1,7 +1,7 @@
 {
   "name": "Klipski",
   "short_name": "Klipski",
-  "description": "Clipboard manager leggero e nativo per macOS, Windows e Linux.",
+  "description": "Clipboard manager leggero e nativo per macOS.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0d12",

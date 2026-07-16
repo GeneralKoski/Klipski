@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { detectOS } from "./lib/detectOS";
-import { DOWNLOADS, OS_ORDER, SITE, type OSId } from "./lib/config";
+import { useEffect, useState } from "react";
+import { SITE } from "./lib/config";
 import { LANGS, useI18n } from "./i18n";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
-import { Downloads } from "./components/Downloads";
 import { Footer } from "./components/Footer";
 
 type Theme = "light" | "dark";
@@ -17,13 +15,8 @@ function initialTheme(): Theme {
 
 export default function App() {
   const { t, lang, setLang } = useI18n();
-  const [detected, setDetected] = useState<OSId | null>(null);
   const [hidden, setHidden] = useState(false);
   const [theme, setTheme] = useState<Theme>(initialTheme);
-
-  useEffect(() => {
-    setDetected(detectOS());
-  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -44,11 +37,6 @@ export default function App() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const recommended = useMemo(
-    () => (detected ? DOWNLOADS[detected] : null),
-    [detected]
-  );
-
   return (
     <>
       <header className={`topbar${hidden ? " topbar--hidden" : ""}`}>
@@ -59,7 +47,6 @@ export default function App() {
           </a>
           <nav className="topnav">
             <a href="#features">{t.nav.features}</a>
-            <a href="#download">{t.nav.download}</a>
             <a href={SITE.repo} target="_blank" rel="noreferrer noopener">
               GitHub
             </a>
@@ -90,9 +77,8 @@ export default function App() {
       </header>
 
       <main id="top">
-        <Hero recommended={recommended} detected={detected} />
+        <Hero />
         <Features />
-        <Downloads recommended={detected} order={OS_ORDER} />
       </main>
 
       <Footer />

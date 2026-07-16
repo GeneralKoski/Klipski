@@ -1,22 +1,18 @@
 # Klipski
 
-Clipboard manager multipiattaforma (sostituto di Clipy): cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico.
+Clipboard manager per macOS (sostituto di Clipy): cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico.
 
 - **macOS** - app nativa in Swift (AppKit/Carbon/ServiceManagement), nessuna dipendenza esterna.
-- **Windows / Linux** - client [Tauri](https://tauri.app) (Rust + UI web React) con la stessa esperienza e le stesse impostazioni.
 - **Sito web** - landing page React + Vite in `website/` per la promozione e il download.
 
 ## Struttura del progetto
 
 ```
 .                 app macOS (Swift) - Sources/, Package.swift, build.sh
-desktop/          client Windows/Linux (Tauri): src/ (UI React) + src-tauri/ (Rust)
-website/          sito vetrina (React + Vite) con rilevamento OS, SEO, sitemap
+website/          sito vetrina (React + Vite) con SEO, sitemap
 deploy.sh         deploy del sito sul server (pull + build, servito da Nginx)
-.github/workflows release.yml (build dei binari su tag)
+.github/workflows release.yml (build del DMG macOS su tag)
 ```
-
-I tre progetti sono indipendenti: l'app macOS resta invariata, gli altri si aggiungono senza toccarla.
 
 ## Funzioni
 
@@ -79,22 +75,9 @@ Alla prima attivazione l'app mostra il prompt di sistema. Dopo aver concesso il 
 
 Le preferenze (limiti, auto-incolla, scorciatoia) sono in `UserDefaults` (dominio `com.klipski.app`). Tutti questi dati **sopravvivono alla reinstallazione** (`build.sh` sostituisce solo l'app in `/Applications`).
 
-## Client Windows / Linux (Tauri)
-
-Stessa UI e stesse impostazioni del Mac, ma con backend Rust e UI web. Requisiti: [Rust](https://rustup.rs), Node 20+ e le [dipendenze di sistema Tauri](https://tauri.app/start/prerequisites/).
-
-```bash
-cd desktop
-npm install
-npm run tauri dev      # avvio in sviluppo
-npm run tauri build    # genera .msi/.exe (Windows) o .AppImage/.deb (Linux)
-```
-
-Dati salvati nella cartella dati applicazione del sistema (`history.json`, `snippets.json`, `settings.json`, `images/`). L'incolla automatico su Linux richiede `libxdo`; il monitor degli appunti, la hotkey globale e l'avvio al login usano i plugin Tauri corrispondenti.
-
 ## Sito web
 
-Landing page in `website/` (React + Vite) che rileva l'OS del visitatore e propone il download giusto. SEO, Open Graph, `robots.txt` e `sitemap.xml` inclusi.
+Landing page in `website/` (React + Vite) con il download per macOS. SEO, Open Graph, `robots.txt` e `sitemap.xml` inclusi.
 
 ```bash
 cd website
@@ -103,9 +86,9 @@ npm run dev      # sviluppo
 npm run build    # output statico in website/dist
 ```
 
-I link di download sono configurabili: copia `.env.example` in `.env` e imposta `VITE_DL_MACOS`, `VITE_DL_WINDOWS`, `VITE_DL_LINUX` con gli URL reali (es. asset delle GitHub Releases). Senza valori restano dei placeholder.
+Il link di download è configurabile: copia `.env.example` in `.env` e imposta `VITE_DL_MACOS` con l'URL reale (es. asset delle GitHub Releases). Senza valore usa il default sulle GitHub Releases.
 
 ## Release & deploy (CI)
 
-- **`.github/workflows/release.yml`** - al push di un tag `v*` compila i binari Tauri per Windows/Linux (`tauri-action`) e il DMG macOS (`INSTALL=0 ./build.sh`), caricandoli in una GitHub Release in bozza.
+- **`.github/workflows/release.yml`** - al push di un tag `v*` (o al bump di versione su `main`) compila il DMG macOS (`INSTALL=0 ./build.sh`) e lo carica in una GitHub Release.
 - **Sito**: deploy manuale via `deploy.sh` (pull + build, servito da Nginx sul server). GitHub Pages dismesso.
