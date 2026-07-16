@@ -6,6 +6,10 @@
 #   4) Build del sito (Nginx serve website/dist/)
 set -eu
 
+# node/npm stanno sotto nvm e non sono nel PATH della shell non interattiva.
+export NVM_DIR="${NVM_DIR:-/root/.nvm}"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null
+
 REPO_DIR="/srv/apps/Klipski"
 WEB_DIR="$REPO_DIR/website"
 
