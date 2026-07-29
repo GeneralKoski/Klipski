@@ -8,13 +8,17 @@ enum MenuHighlighter {
         let target = menu.items[1] // item 0 = campo di ricerca
         guard target.isEnabled else { return }
         let selector = NSSelectorFromString("highlightItem:")
-        if menu.responds(to: selector) {
-            menu.perform(selector, with: target)
-        }
+        guard menu.responds(to: selector) else { return }
+        menu.perform(selector, with: target)
     }
 }
 
 /// Campo di ricerca da inserire come vista di una voce di menu.
+///
+/// Il first responder se lo prende solo quando il sottomenu viene davvero evidenziato,
+/// cioè quando ci si è entrati. Aprendosi, la finestra del sottomenu lo darebbe al campo
+/// già solo passando sul genitore: da lì in poi le frecce finiscono nel field editor e il
+/// menu principale, che è ancora quello navigato, smette di rispondere.
 @MainActor
 final class MenuSearchField: NSView, NSSearchFieldDelegate {
     private let field = NSSearchField()
@@ -30,21 +34,26 @@ final class MenuSearchField: NSView, NSSearchFieldDelegate {
         field.controlSize = .regular
         field.sendsSearchStringImmediately = true
         field.sendsWholeSearchString = false
+        field.refusesFirstResponder = true
         addSubview(field)
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
+    func noteHighlight(_ item: NSMenuItem?) {
+        guard item != nil else {
+            field.refusesFirstResponder = true
+            return
+        }
+        guard let window, field.currentEditor() == nil else { return }
+        field.refusesFirstResponder = false
+        window.makeFirstResponder(field)
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        guard window != nil else { return }
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.window?.makeFirstResponder(self.field)
-            if let menu = self.enclosingMenuItem?.menu {
-                MenuHighlighter.highlightFirstResult(in: menu)
-            }
-        }
+        guard window == nil else { return }
+        field.refusesFirstResponder = true
     }
 
     func controlTextDidChange(_ obj: Notification) {
@@ -52,135 +61,36 @@ final class MenuSearchField: NSView, NSSearchFieldDelegate {
     }
 
     func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        // Freccia sinistra a campo vuoto → rilascia il focus, così la navigazione
-        // nativa del menu (incluso "torna indietro") riprende a funzionare.
-        if commandSelector == #selector(NSResponder.moveLeft(_:)), field.stringValue.isEmpty {
-            let win = window
-            win?.makeFirstResponder(nil)
-            // Rilancia la freccia sinistra al menu (ora che il campo non ha più il focus),
-            // così con una sola pressione si torna indietro al menu padre.
-            DispatchQueue.main.async {
-                if let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
-                                                timestamp: ProcessInfo.processInfo.systemUptime,
-                                                windowNumber: win?.windowNumber ?? 0, context: nil,
-                                                characters: "", charactersIgnoringModifiers: "",
-                                                isARepeat: false, keyCode: 123) {
-                    NSApp.postEvent(event, atStart: true)
-                }
-            }
-            return true
+        // Su/giù il menu li gestisce da sé anche mentre il campo ha il first responder,
+        // la freccia sinistra no: qui la rilanciamo dopo aver mollato il fuoco, così con
+        // una sola pressione si torna al menu padre.
+        guard commandSelector == #selector(NSResponder.moveLeft(_:)), field.stringValue.isEmpty else {
+            return false
         }
-        return false
-    }
-}
-
-/// Campo invisibile messo come prima voce del menu principale: cattura le frecce
-/// su/giù (via field editor) per far rimbalzare l'evidenziazione agli estremi.
-/// Il menu nativo non inoltra i tasti a event monitor, ma li passa al first responder.
-@MainActor
-final class MenuArrowWrapField: NSView, NSTextFieldDelegate {
-    private let field = NSTextField()
-    /// Fornita dall'esterno: la voce attualmente evidenziata nel menu.
-    var highlightedItem: (() -> NSMenuItem?)?
-    /// Evidenziazione vista al keystroke precedente, per capire se ci si è spostati.
-    private weak var previousHighlight: NSMenuItem?
-
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        field.frame = bounds
-        field.isBordered = false
-        field.isBezeled = false
-        field.drawsBackground = false
-        field.focusRingType = .none
-        field.isEditable = true
-        field.delegate = self
-        field.alphaValue = 0
-        addSubview(field)
-    }
-
-    required init?(coder: NSCoder) { fatalError() }
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        guard window != nil else { return }
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.window?.makeFirstResponder(self.field)
-        }
-    }
-
-    /// Riprende il focus se non ce l'ha già (il campo è a fuoco quando ha un field editor).
-    func grabFocus() {
-        guard let window, field.currentEditor() == nil else { return }
-        window.makeFirstResponder(field)
-    }
-
-    private func selectableItems(in menu: NSMenu) -> [NSMenuItem] {
-        menu.items.filter { $0.isEnabled && !$0.isSeparatorItem && $0.view == nil }
-    }
-
-    private func highlight(_ item: NSMenuItem, in menu: NSMenu) {
-        let selector = NSSelectorFromString("highlightItem:")
-        guard menu.responds(to: selector) else { return }
-        menu.perform(selector, with: item)
-    }
-
-    private func wrapIfNeeded(forward: Bool) -> Bool {
-        guard let menu = enclosingMenuItem?.menu else { return false }
-        let items = selectableItems(in: menu)
-        guard let first = items.first, let last = items.last else { return false }
-        // Il menu nativo sposta l'evidenziazione PRIMA di chiamarci: confrontiamo con
-        // il keystroke precedente per wrappare solo quando si è già fermi all'estremo
-        // (evidenziazione invariata), così non si "salta" l'ultima/prima voce.
-        let current = highlightedItem?()
-        let moved = current !== previousHighlight
-        previousHighlight = current
-        guard current != nil else { return false }
-        if forward, current === last, !moved {
-            highlight(first, in: menu)
-            previousHighlight = first
-            return true
-        }
-        if !forward, current === first, !moved {
-            highlight(last, in: menu)
-            previousHighlight = last
-            return true
-        }
-        return false
-    }
-
-    /// Rilascia il focus dal campo e rilancia il tasto al menu, così la gestione
-    /// nativa (apertura sottomenu / attivazione voce) torna a funzionare.
-    private func forwardToMenu(keyCode: UInt16) {
         let win = window
+        field.refusesFirstResponder = true
         win?.makeFirstResponder(nil)
         DispatchQueue.main.async {
             if let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
                                             timestamp: ProcessInfo.processInfo.systemUptime,
                                             windowNumber: win?.windowNumber ?? 0, context: nil,
                                             characters: "", charactersIgnoringModifiers: "",
-                                            isARepeat: false, keyCode: keyCode) {
+                                            isARepeat: false, keyCode: 123) {
                 NSApp.postEvent(event, atStart: true)
             }
         }
+        return true
     }
+}
 
-    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
-        if commandSelector == #selector(NSResponder.moveDown(_:)), wrapIfNeeded(forward: true) {
-            return true
-        }
-        if commandSelector == #selector(NSResponder.moveUp(_:)), wrapIfNeeded(forward: false) {
-            return true
-        }
-        if commandSelector == #selector(NSResponder.moveRight(_:)) {
-            forwardToMenu(keyCode: 124) // freccia destra → apre il sottomenu
-            return true
-        }
-        if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-            forwardToMenu(keyCode: 36) // invio → attiva la voce / apre il sottomenu
-            return true
-        }
-        return false
+/// Delegate del sottomenu Testi: gira i cambi di evidenziazione al campo di ricerca,
+/// che li usa per sapere quando è il momento di prendere il first responder.
+@MainActor
+final class TextMenuDelegate: NSObject, NSMenuDelegate {
+    weak var searchField: MenuSearchField?
+
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        searchField?.noteHighlight(item)
     }
 }
 

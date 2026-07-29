@@ -12,9 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var hotKey: HotKeyManager!
     private var settingsController: SettingsWindowController?
     private let imageMenuDelegate = ImageMenuHighlightDelegate()
-
-    private weak var highlightedMainItem: NSMenuItem?
-    private weak var wrapField: MenuArrowWrapField?
+    private let textMenuDelegate = TextMenuDelegate()
 
     private let defaults = UserDefaults.standard
     private let autoPasteKey = "autoPaste"
@@ -140,26 +138,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.performClick(nil)
     }
 
-    // Wrap su/giù nel menu principale: il campo invisibile in cima cattura le frecce
-    // e qui teniamo traccia della voce evidenziata.
-    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
-        guard menu === self.menu else { return }
-        highlightedMainItem = item
-        // Tornati a navigare il menu principale (es. dopo essere usciti da un
-        // sottomenu), il campo riprende il focus così il wrap su/giù continua a funzionare.
-        DispatchQueue.main.async { [weak self] in self?.wrapField?.grabFocus() }
-    }
-
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        highlightedMainItem = nil
-
-        let wrapItem = NSMenuItem()
-        let wrapField = MenuArrowWrapField(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
-        wrapField.highlightedItem = { [weak self] in self?.highlightedMainItem }
-        self.wrapField = wrapField
-        wrapItem.view = wrapField
-        menu.addItem(wrapItem)
 
         menu.addItem(makeTextMenu())
         menu.addItem(makeImageMenu())
@@ -200,23 +180,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let count = history.items.lazy.filter { $0.kind == .text }.count
         let parent = NSMenuItem(title: L("Testi (%d)", count), action: nil, keyEquivalent: "")
         let submenu = NSMenu()
+        submenu.delegate = textMenuDelegate
 
         let searchItem = NSMenuItem()
         let searchView = MenuSearchField(frame: NSRect(x: 0, y: 0, width: 260, height: 36))
         searchView.onChange = { [weak self, weak submenu] query in
             guard let self, let submenu else { return }
-            self.populateTextMenu(submenu, query: query)
+            self.populateTextMenu(submenu, query: query, highlightFirst: true)
         }
         searchItem.view = searchView
         submenu.addItem(searchItem)
+        textMenuDelegate.searchField = searchView
 
-        populateTextMenu(submenu, query: "")
+        populateTextMenu(submenu, query: "", highlightFirst: false)
         parent.submenu = submenu
         return parent
     }
 
     /// Riempie il sottomenu Testi sotto il campo di ricerca (item 0), filtrando per `query`.
-    private func populateTextMenu(_ submenu: NSMenu, query: String) {
+    /// `highlightFirst` solo mentre si digita: all'apertura automatica del sottomenu
+    /// evidenziare il primo risultato darebbe due selezioni colorate insieme.
+    private func populateTextMenu(_ submenu: NSMenu, query: String, highlightFirst: Bool) {
         while submenu.items.count > 1 {
             submenu.removeItem(at: 1)
         }
@@ -232,7 +216,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for (index, item) in filtered {
                 submenu.addItem(makeHistoryItem(item, index: index))
             }
-            MenuHighlighter.highlightFirstResult(in: submenu)
+            if highlightFirst {
+                MenuHighlighter.highlightFirstResult(in: submenu)
+            }
         }
     }
 
