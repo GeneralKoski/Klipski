@@ -1,94 +1,56 @@
 # Klipski
 
-Clipboard manager per macOS (sostituto di Clipy): cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico.
+A clipboard manager for macOS, written as a replacement for Clipy. It keeps a
+history of copied text and images, holds reusable snippets in folders, and pastes
+the selected item automatically. It lives in the status bar and has no Dock icon.
 
-- **macOS** - app nativa in Swift (AppKit/Carbon/ServiceManagement), nessuna dipendenza esterna.
-- **Sito web** - landing page React + Vite in `website/` per la promozione e il download.
+Main features: separate history limits for text and images (50 and 10 by
+default), snippet folders shown directly in the menu, a configurable global
+hotkey (`Cmd+Shift+V` by default), auto-paste, import of snippet folders from a
+Clipy XML export, and launch at login.
 
-## Struttura del progetto
+## Stack
 
-```
-.                 app macOS (Swift) - Sources/, Package.swift, build.sh
-website/          sito vetrina (React + Vite) con SEO, sitemap
-deploy.sh         deploy del sito sul server (pull + build, servito da Nginx)
-.github/workflows release.yml (build del DMG macOS su tag)
-```
+- Swift 6, macOS 14 or later
+- AppKit for the UI, Carbon for the global hotkey, ServiceManagement for launch at login
+- No external dependencies: a single SwiftPM executable target
+- `website/`: a separate landing page in React and Vite
 
-## Funzioni
+History and snippets are stored as JSON in
+`~/Library/Application Support/Klipski/`, with images kept as PNG files
+alongside. Preferences live in `UserDefaults` under `com.klipski.app`.
 
-- **Cronologia appunti**: monitora gli appunti (testo e immagini), con deduplica e persistenza in `~/Library/Application Support/Klipski/`. Limiti separati e configurabili: di default **50 testi** e **10 immagini**.
-- **Menu nella barra di stato**: due cartelle **Testi** e **Immagini** con gli elementi recenti (testo troncato a ~50 caratteri). Click su un elemento → lo rimette negli appunti.
-- **Incolla automaticamente**: dopo la copia simula `Cmd+V` (richiede permesso Accessibilità). Attivo di default; la spunta riflette lo stato effettivo (off se manca il permesso).
-- **Hotkey globale personalizzabile**: default `Cmd+Shift+V`, modificabile dalla dashboard *Personalizza…*.
-- **Snippet a cartelle**: cartelle di testi fissi (es. "Mails", "Firme") mostrate come voci dirette del menu. Gestione completa (crea/rinomina/elimina cartelle e snippet) dalla dashboard.
-- **Import da Clipy**: importa le cartelle di snippet da un file XML esportato da Clipy (*Snippets → Export Snippets…*).
-- **Avvia al login**: tramite `SMAppService` (API moderna, niente notifiche cicliche).
+## Running locally
 
-## Requisiti
-
-- macOS 14 o superiore
-- Command Line Tools di Xcode (`xcode-select --install`) - **non serve Xcode**
-
-## Installazione
+Requires the Xcode Command Line Tools (`xcode-select --install`). Xcode itself is
+not needed.
 
 ```bash
-git clone <url-repo> Klipski
-cd Klipski
 ./build.sh
 ```
 
-Lo script compila in release, assembla `Klipski.app`, la firma ad-hoc, la copia in `/Applications` e la avvia. L'icona compare nella barra di stato (nessuna icona nel Dock).
+This builds in release mode, assembles `Klipski.app`, signs it ad-hoc, copies it
+to `/Applications` and launches it.
 
-Compilando in locale l'app non ha quarantena, quindi **niente avvisi Gatekeeper**.
+Auto-paste simulates `Cmd+V` and needs the Accessibility permission
+(System Settings, Privacy and Security, Accessibility). Grant it and restart the
+app. Without the permission the item is still copied to the clipboard.
 
-> Nota: ad ogni ricompilazione la firma ad-hoc cambia, quindi macOS **resetta il permesso Accessibilità**. Va riconcesso e l'app riavviata (vedi sotto).
+Note: each rebuild changes the ad-hoc signature, so macOS resets the
+Accessibility permission and it has to be granted again.
 
-## Dashboard "Personalizza…"
-
-Dal menu della barra di stato → *Personalizza…* apri la finestra di gestione, dove puoi:
-
-- impostare la **scorciatoia globale** di apertura;
-- scegliere quanti **testi/immagini** mostrare;
-- creare/rinominare/eliminare **cartelle** e **snippet** (titolo + contenuto multiriga);
-- **importare** gli snippet da Clipy (Export XML).
-
-## Permesso Accessibilità (auto-incolla)
-
-L'opzione "Incolla automaticamente" simula `Cmd+V` e richiede il permesso Accessibilità:
-
-**Impostazioni di Sistema → Privacy e sicurezza → Accessibilità → abilita Klipski**
-
-Alla prima attivazione l'app mostra il prompt di sistema. Dopo aver concesso il permesso **riavvia Klipski** perché diventi effettivo. Senza il permesso l'elemento viene comunque copiato negli appunti (nessun crash).
-
-## Importare gli snippet da Clipy
-
-1. In Clipy: icona nella barra → *Edit Snippets…* → menu *Snippets* → *Export Snippets…* e salva il file `.xml` (consigliato: sul Desktop).
-2. In Klipski: *Personalizza…* → *Importa da Clipy…* → seleziona l'XML. Le cartelle vengono aggiunte a quelle esistenti.
-
-> Clipy salva gli snippet in un database Realm (binario): l'import passa dall'export XML perché leggere il Realm richiederebbe una dipendenza esterna.
-
-## Dati salvati
-
-`~/Library/Application Support/Klipski/`
-- `history.json` - cronologia (le immagini sono file PNG referenziati in `images/`)
-- `snippets.json` - cartelle e snippet
-
-Le preferenze (limiti, auto-incolla, scorciatoia) sono in `UserDefaults` (dominio `com.klipski.app`). Tutti questi dati **sopravvivono alla reinstallazione** (`build.sh` sostituisce solo l'app in `/Applications`).
-
-## Sito web
-
-Landing page in `website/` (React + Vite) con il download per macOS. SEO, Open Graph, `robots.txt` e `sitemap.xml` inclusi.
+For the landing page:
 
 ```bash
 cd website
 npm install
-npm run dev      # sviluppo
-npm run build    # output statico in website/dist
+npm run dev
 ```
 
-Il link di download è configurabile: copia `.env.example` in `.env` e imposta `VITE_DL_MACOS` con l'URL reale (es. asset delle GitHub Releases). Senza valore usa il default sulle GitHub Releases.
+## Status
 
-## Release & deploy (CI)
+Complete and working. Releases are automated in GitHub Actions: bumping the
+version in `website/package.json` and pushing to `main` creates the matching
+`vX.Y.Z` tag and publishes a release with the macOS DMG.
 
-- **`.github/workflows/release.yml`** - al push di un tag `v*` (o al bump di versione su `main`) compila il DMG macOS (`INSTALL=0 ./build.sh`) e lo carica in una GitHub Release.
-- **Sito**: deploy manuale via `deploy.sh` (pull + build, servito da Nginx sul server). GitHub Pages dismesso.
+Licensed under MIT.
