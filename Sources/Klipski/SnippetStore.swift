@@ -64,6 +64,25 @@ final class SnippetStore {
         save()
     }
 
+    func moveFolder(from source: Int, to destination: Int) {
+        guard folders.indices.contains(source), folders.indices.contains(destination),
+              source != destination else { return }
+        let folder = folders.remove(at: source)
+        folders.insert(folder, at: destination)
+        save()
+    }
+
+    func moveSnippet(folderIndex: Int, from source: Int, to destination: Int) {
+        guard folders.indices.contains(folderIndex) else { return }
+        var list = folders[folderIndex].snippets
+        guard list.indices.contains(source), list.indices.contains(destination),
+              source != destination else { return }
+        let snippet = list.remove(at: source)
+        list.insert(snippet, at: destination)
+        folders[folderIndex].snippets = list
+        save()
+    }
+
     func deleteSnippet(folderIndex: Int, snippetIndex: Int) {
         guard folders.indices.contains(folderIndex),
               folders[folderIndex].snippets.indices.contains(snippetIndex) else { return }

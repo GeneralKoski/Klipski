@@ -34,6 +34,8 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     private var editingFolder: Int?
     private var editingSnippet: Int?
 
+    private static let rowDragType = NSPasteboard.PasteboardType("com.klipski.settings.row")
+
     init(snippets: SnippetStore, history: HistoryStore,
          hotKeyCode: UInt32, hotKeyModifiers: UInt32,
          saveLimits: @escaping (Int, Int) -> Void,
@@ -132,24 +134,27 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         content.addSubview(makeLabel(L("Titolo / contenuto"), frame: NSRect(x: 404, y: 418, width: 296, height: 18)))
 
         // Tabella cartelle.
-        foldersTable = makeTable()
-        content.addSubview(scrollWrapping(foldersTable, frame: NSRect(x: 20, y: 70, width: 180, height: 340)))
-        content.addSubview(makeButton("+", frame: NSRect(x: 20, y: 38, width: 40, height: 26), action: #selector(addFolder)))
-        content.addSubview(makeButton("−", frame: NSRect(x: 62, y: 38, width: 40, height: 26), action: #selector(removeFolder)))
-        content.addSubview(makeButton(L("Rinomina"), frame: NSRect(x: 104, y: 38, width: 96, height: 26), action: #selector(renameFolder)))
+        foldersTable = makeTable { [weak self] in self?.removeFolder() }
+        content.addSubview(scrollWrapping(foldersTable, frame: NSRect(x: 20, y: 100, width: 180, height: 310)))
+        content.addSubview(makeButton("+", frame: NSRect(x: 20, y: 66, width: 40, height: 26), action: #selector(addFolder)))
+        content.addSubview(makeButton("−", frame: NSRect(x: 62, y: 66, width: 40, height: 26), action: #selector(removeFolder)))
+        content.addSubview(makeButton(L("Rinomina"), frame: NSRect(x: 104, y: 66, width: 96, height: 26), action: #selector(renameFolder)))
+        content.addSubview(makeButton("▲", frame: NSRect(x: 20, y: 34, width: 40, height: 26), action: #selector(moveFolderUp)))
+        content.addSubview(makeButton("▼", frame: NSRect(x: 62, y: 34, width: 40, height: 26), action: #selector(moveFolderDown)))
 
         // Tabella snippet.
-        snippetsTable = makeTable()
-        content.addSubview(scrollWrapping(snippetsTable, frame: NSRect(x: 212, y: 70, width: 180, height: 340)))
-        content.addSubview(makeButton("+", frame: NSRect(x: 212, y: 38, width: 40, height: 26), action: #selector(addSnippet)))
-        content.addSubview(makeButton("−", frame: NSRect(x: 254, y: 38, width: 40, height: 26), action: #selector(removeSnippet)))
+        snippetsTable = makeTable { [weak self] in self?.removeSnippet() }
+        content.addSubview(scrollWrapping(snippetsTable, frame: NSRect(x: 212, y: 100, width: 180, height: 310)))
+        content.addSubview(makeButton("+", frame: NSRect(x: 212, y: 66, width: 40, height: 26), action: #selector(addSnippet)))
+        content.addSubview(makeButton("−", frame: NSRect(x: 254, y: 66, width: 40, height: 26), action: #selector(removeSnippet)))
+        content.addSubview(makeButton("▲", frame: NSRect(x: 212, y: 34, width: 40, height: 26), action: #selector(moveSnippetUp)))
+        content.addSubview(makeButton("▼", frame: NSRect(x: 254, y: 34, width: 40, height: 26), action: #selector(moveSnippetDown)))
 
         // Editor snippet.
         titleField = NSTextField(frame: NSRect(x: 404, y: 380, width: 296, height: 26))
-        titleField.placeholderString = L("Titolo")
         content.addSubview(titleField)
 
-        let scroll = NSScrollView(frame: NSRect(x: 404, y: 70, width: 296, height: 300))
+        let scroll = NSScrollView(frame: NSRect(x: 404, y: 100, width: 296, height: 270))
         scroll.hasVerticalScroller = true
         scroll.borderType = .bezelBorder
         contentTextView = NSTextView(frame: scroll.bounds)
@@ -182,8 +187,9 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         return button
     }
 
-    private func makeTable() -> NSTableView {
-        let table = NSTableView()
+    private func makeTable(onDelete: @escaping () -> Void) -> NSTableView {
+        let table = DeletableTableView()
+        table.onDelete = onDelete
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("col"))
         column.width = 160
         column.isEditable = true
@@ -193,6 +199,9 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         table.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         table.rowHeight = 22
         table.usesAutomaticRowHeights = false
+        table.registerForDraggedTypes([Self.rowDragType])
+        table.setDraggingSourceOperationMask(.move, forLocal: true)
+        table.draggingDestinationFeedbackStyle = .gap
         return table
     }
 
@@ -309,17 +318,21 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
     }
 
     @objc private func removeFolder() {
-        guard let index = selectedFolder else { return }
+        guard let index = selectedFolder, let window else { return }
         let alert = NSAlert()
         alert.messageText = L("Eliminare la cartella \"%@\"?", snippets.folders[index].name)
         alert.informativeText = L("Verranno rimossi tutti gli snippet contenuti.")
         alert.addButton(withTitle: L("Elimina"))
         alert.addButton(withTitle: L("Annulla"))
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        snippets.deleteFolder(at: index)
-        foldersTable.reloadData()
-        snippetsTable.reloadData()
-        clearEditor()
+        alert.beginSheetModal(for: window) { [weak self] response in
+            guard response == .alertFirstButtonReturn, let self else { return }
+            // Prima svuoto l'editor: il reload azzera la selezione e farebbe
+            // ricadere commitEditor() su indici che non esistono più.
+            self.clearEditor()
+            self.snippets.deleteFolder(at: index)
+            self.foldersTable.reloadData()
+            self.snippetsTable.reloadData()
+        }
     }
 
     @objc private func renameFolder() {
@@ -347,11 +360,51 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     @objc private func removeSnippet() {
         guard let folder = selectedFolder, snippetsTable.selectedRow >= 0 else { return }
-        snippets.deleteSnippet(folderIndex: folder, snippetIndex: snippetsTable.selectedRow)
+        let row = snippetsTable.selectedRow
+        clearEditor()
+        snippets.deleteSnippet(folderIndex: folder, snippetIndex: row)
         snippetsTable.reloadData()
         foldersTable.reloadData()
         foldersTable.selectRowIndexes([folder], byExtendingSelection: false)
+    }
+
+    @objc private func moveFolderUp() { moveSelectedFolder(by: -1) }
+    @objc private func moveFolderDown() { moveSelectedFolder(by: 1) }
+    @objc private func moveSnippetUp() { moveSelectedSnippet(by: -1) }
+    @objc private func moveSnippetDown() { moveSelectedSnippet(by: 1) }
+
+    private func moveSelectedFolder(by delta: Int) {
+        guard let index = selectedFolder else { return }
+        moveFolder(from: index, to: index + delta)
+    }
+
+    private func moveSelectedSnippet(by delta: Int) {
+        let row = snippetsTable.selectedRow
+        guard row >= 0 else { return }
+        moveSnippet(from: row, to: row + delta)
+    }
+
+    /// Sposta una cartella e mantiene selezionata la cartella spostata.
+    private func moveFolder(from source: Int, to destination: Int) {
+        guard snippets.folders.indices.contains(destination), destination != source else { return }
+        commitEditor()
+        snippets.moveFolder(from: source, to: destination)
         clearEditor()
+        foldersTable.reloadData()
+        foldersTable.selectRowIndexes([destination], byExtendingSelection: false)
+        snippetsTable.reloadData()
+    }
+
+    /// Sposta uno snippet nella cartella selezionata e lo mantiene selezionato.
+    private func moveSnippet(from source: Int, to destination: Int) {
+        guard let folder = selectedFolder,
+              snippets.folders[folder].snippets.indices.contains(destination),
+              destination != source else { return }
+        commitEditor()
+        snippets.moveSnippet(folderIndex: folder, from: source, to: destination)
+        clearEditor()
+        snippetsTable.reloadData()
+        snippetsTable.selectRowIndexes([destination], byExtendingSelection: false)
     }
 
     private func prompt(message: String, placeholder: String) -> String? {
@@ -416,6 +469,33 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
         }
     }
 
+    func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
+        let item = NSPasteboardItem()
+        item.setString(String(row), forType: Self.rowDragType)
+        return item
+    }
+
+    func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo,
+                   proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
+        guard dropOperation == .above, (info.draggingSource as? NSTableView) === tableView else { return [] }
+        return .move
+    }
+
+    func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
+                   row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
+        guard let source = Int(info.draggingPasteboard.pasteboardItems?.first?.string(forType: Self.rowDragType) ?? "") else {
+            return false
+        }
+        // `row` è l'indice di inserimento: se si sposta in basso va corretto di uno.
+        let destination = row > source ? row - 1 : row
+        if tableView === foldersTable {
+            moveFolder(from: source, to: destination)
+        } else {
+            moveSnippet(from: source, to: destination)
+        }
+        return true
+    }
+
     func tableViewSelectionDidChange(_ notification: Notification) {
         guard let table = notification.object as? NSTableView else { return }
         commitEditor()
@@ -435,6 +515,20 @@ final class SettingsWindowController: NSWindowController, NSTableViewDataSource,
 
     func windowWillClose(_ notification: Notification) {
         commitEditor()
+    }
+}
+
+/// Tabella che elimina la riga selezionata con Backspace o Canc.
+private final class DeletableTableView: NSTableView {
+    var onDelete: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        // 51 = backspace, 117 = canc.
+        if (event.keyCode == 51 || event.keyCode == 117), selectedRow >= 0 {
+            onDelete?()
+            return
+        }
+        super.keyDown(with: event)
     }
 }
 
