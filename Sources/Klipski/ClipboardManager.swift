@@ -27,15 +27,6 @@ final class ClipboardManager {
         lastChangeCount = pasteboard.changeCount
     }
 
-    /// Scrive testo formattato (RTF) + il fallback in testo semplice.
-    func setRichText(_ rtf: Data, plain: String) {
-        pasteboard.clearContents()
-        pasteboard.declareTypes([.rtf, .string], owner: nil)
-        pasteboard.setData(rtf, forType: .rtf)
-        pasteboard.setString(plain, forType: .string)
-        lastChangeCount = pasteboard.changeCount
-    }
-
     func setImage(_ data: Data) {
         pasteboard.clearContents()
         pasteboard.declareTypes([.tiff, .png], owner: nil)
@@ -69,12 +60,10 @@ final class ClipboardManager {
             onChange?()
             return
         }
-        // 2. Testo (con RTF se la sorgente lo fornisce, per poter incollare con formattazione).
+        // 2. Testo (sempre solo testo semplice).
         if let str = pasteboard.string(forType: .string),
            !str.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let concealed = isConcealed()
-            // Le password (concealed) non hanno formattazione utile: niente RTF.
-            history.addText(str, rtf: concealed ? nil : pasteboard.data(forType: .rtf), concealed: concealed)
+            history.addText(str, concealed: isConcealed())
             onChange?()
             return
         }

@@ -27,6 +27,7 @@ macOS. **Non creare il tag a mano.**
 ## Note app macOS
 
 - Menu nativo (`NSMenu`) gestito in `AppDelegate.swift`; viste custom del menu in `MenuViews.swift`.
-- Il wrap su/giù del menu principale usa un campo invisibile first-responder
-  (`MenuArrowWrapField`) perché `NSMenu` non inoltra i tasti agli event monitor
-  durante il tracking. Stessa tecnica del campo di ricerca in `MenuSearchField`.
+- Il wrap su/giù del menu principale usa un `CGEventTap` di sessione
+  (`MenuArrowWrapper`, attivo solo a menu aperto) perché durante il tracking `NSMenu`
+  non inoltra i tasti né agli event monitor né a un first responder in un'altra
+  finestra. Richiede il permesso Accessibilità (lo stesso dell'auto-incolla).

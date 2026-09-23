@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var settingsController: SettingsWindowController?
     private let imageMenuDelegate = ImageMenuHighlightDelegate()
     private let textMenuDelegate = TextMenuDelegate()
+    private lazy var arrowWrapper = MenuArrowWrapper(menu: menu)
 
     private let defaults = UserDefaults.standard
     private let autoPasteKey = "autoPaste"
@@ -138,6 +139,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.performClick(nil)
     }
 
+    func menuWillOpen(_ menu: NSMenu) {
+        arrowWrapper.start()
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        arrowWrapper.stop()
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
@@ -260,22 +269,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 menuItem.tag = index
                 return menuItem
             }
-            // Testo con formattazione: sottomenu con la scelta. Altrimenti click singolo.
-            if item.rtfData != nil {
-                let parent = NSMenuItem(title: truncate(item.text ?? ""), action: nil, keyEquivalent: "")
-                parent.attributedTitle = titleWithTimestamp(truncate(item.text ?? ""), date: item.createdAt)
-                let submenu = NSMenu()
-                let formatted = NSMenuItem(title: L("Incolla con formattazione"), action: #selector(selectTextFormatted(_:)), keyEquivalent: "")
-                formatted.target = self
-                formatted.tag = index
-                submenu.addItem(formatted)
-                let plain = NSMenuItem(title: L("Incolla solo testo"), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
-                plain.target = self
-                plain.tag = index
-                submenu.addItem(plain)
-                parent.submenu = submenu
-                return parent
-            }
             let menuItem = NSMenuItem(title: truncate(item.text ?? ""), action: #selector(selectHistoryItem(_:)), keyEquivalent: "")
             menuItem.attributedTitle = titleWithTimestamp(truncate(item.text ?? ""), date: item.createdAt)
             menuItem.target = self
@@ -334,25 +327,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         switch item.kind {
         case .text:
             clipboard.setText(item.text ?? "")
-            history.addText(item.text ?? "", rtf: item.rtfData, concealed: item.concealed ?? false)
+            history.addText(item.text ?? "", concealed: item.concealed ?? false)
         case .image:
             if let url = history.imageURL(for: item), let data = try? Data(contentsOf: url) {
                 clipboard.setImage(data)
                 history.addImage(data)
             }
         }
-        pasteIfNeeded()
-    }
-
-    @objc private func selectTextFormatted(_ sender: NSMenuItem) {
-        guard history.items.indices.contains(sender.tag) else { return }
-        let item = history.items[sender.tag]
-        if let rtf = item.rtfData {
-            clipboard.setRichText(rtf, plain: item.text ?? "")
-        } else {
-            clipboard.setText(item.text ?? "")
-        }
-        history.addText(item.text ?? "", rtf: item.rtfData, concealed: item.concealed ?? false)
         pasteIfNeeded()
     }
 
@@ -364,7 +345,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
               snippets.folders[parts[0]].snippets.indices.contains(parts[1]) else { return }
         let content = snippets.folders[parts[0]].snippets[parts[1]].content
         clipboard.setText(content)
-        history.addText(content, rtf: nil, concealed: false)
+        history.addText(content, concealed: false)
         pasteIfNeeded()
     }
 

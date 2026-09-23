@@ -165,3 +165,79 @@ final class ImageMenuHighlightDelegate: NSObject, NSMenuDelegate {
         previewWindow = nil
     }
 }
+
+/// Giro infinito su/giù nel menu principale.
+///
+/// Durante il tracking NSMenu non passa i tasti né agli event monitor né al first
+/// responder, quindi le frecce si leggono con un event tap di sessione (serve il
+/// permesso Accessibilità, lo stesso dell'auto-incolla), attivo solo a menu aperto.
+@MainActor
+final class MenuArrowWrapper {
+    private let menu: NSMenu
+    private var tap: CFMachPort?
+
+    init(menu: NSMenu) {
+        self.menu = menu
+    }
+
+    func start() {
+        if tap == nil {
+            createTap()
+        }
+        if let tap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
+    }
+
+    func stop() {
+        if let tap {
+            CGEvent.tapEnable(tap: tap, enable: false)
+        }
+    }
+
+    private func createTap() {
+        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        let callback: CGEventTapCallBack = { _, type, event, userInfo in
+            guard let userInfo else { return Unmanaged.passUnretained(event) }
+            let wrapper = Unmanaged<MenuArrowWrapper>.fromOpaque(userInfo).takeUnretainedValue()
+            let consumed = MainActor.assumeIsolated { wrapper.handle(type: type, event: event) }
+            return consumed ? nil : Unmanaged.passUnretained(event)
+        }
+        guard let port = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap,
+                                           options: .defaultTap, eventsOfInterest: mask,
+                                           callback: callback,
+                                           userInfo: Unmanaged.passUnretained(self).toOpaque()) else { return }
+        let source = CFMachPortCreateRunLoopSource(nil, port, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        tap = port
+    }
+
+    private func handle(type: CGEventType, event: CGEvent) -> Bool {
+        if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
+            return false
+        }
+        guard type == .keyDown else { return false }
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        guard keyCode == 125 || keyCode == 126 else { return false } // giù, su
+
+        let selectable = menu.items.filter { !$0.isSeparatorItem && $0.isEnabled && !$0.isHidden }
+        guard let first = selectable.first, let last = selectable.last,
+              let current = menu.highlightedItem else { return false }
+        // Se si sta navigando un sottomenu le frecce sono sue.
+        if current.submenu?.highlightedItem != nil { return false }
+
+        let target: NSMenuItem
+        if keyCode == 125, current === last {
+            target = first
+        } else if keyCode == 126, current === first {
+            target = last
+        } else {
+            return false
+        }
+        let selector = NSSelectorFromString("highlightItem:")
+        guard menu.responds(to: selector) else { return false }
+        menu.perform(selector, with: target)
+        return true
+    }
+}
