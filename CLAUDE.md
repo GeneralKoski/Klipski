@@ -23,6 +23,7 @@ macOS. **Non creare il tag a mano.**
 - Push su `main` **senza** bump di versione → nessuna release (il job `check` esce con `release=false`).
 - Il push di un tag `v*` a mano resta supportato come prima.
 - `build.sh` ricava la versione del bundle macOS da `GITHUB_REF_NAME` in CI; in locale usa il default hardcoded (va aggiornato col bump).
+- Il sito **non** si aggiorna col workflow: la versione mostrata è compilata da `website/package.json`. Dopo il push va lanciato `deploy.sh` sul server (`ssh root@188.245.201.81 /srv/apps/Klipski/deploy.sh`), che fa solo pull + build del sito.
 
 ## Note app macOS
 
