@@ -7,7 +7,7 @@ BUNDLE_ID="com.klipski.app"
 if [[ "${GITHUB_REF_NAME:-}" == v* ]]; then
     VERSION="${GITHUB_REF_NAME#v}"
 else
-    VERSION="1.0.9"
+    VERSION="1.0.10"
 fi
 APP="$APP_NAME.app"
 DEST="/Applications/$APP"
