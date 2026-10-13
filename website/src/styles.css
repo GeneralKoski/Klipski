@@ -547,7 +547,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
   .menu-main { width: 268px; }
   .menu-sub { width: 320px; }
   .groups { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .group { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
+  .groups > .group { display: grid; grid-template-rows: subgrid; grid-row: span 2; row-gap: 0; }
 }
 @media (min-width: 900px) {
   .install-grid { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 64px; }
