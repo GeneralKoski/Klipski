@@ -1,66 +1,59 @@
 import { useEffect, useState } from "react";
 import { SITE } from "./lib/config";
-import { LANGS, useI18n } from "./i18n";
+import { LANGS, readStored, useI18n, writeStored } from "./i18n";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
+import { Install } from "./components/Install";
 import { Footer } from "./components/Footer";
 
 type Theme = "light" | "dark";
 
 function initialTheme(): Theme {
-  const stored = localStorage.getItem("klipski-theme");
+  const stored = readStored("klipski-theme");
   if (stored === "light" || stored === "dark") return stored;
   return "dark";
 }
 
 export default function App() {
   const { t, lang, setLang } = useI18n();
-  const [hidden, setHidden] = useState(false);
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem("klipski-theme", theme);
+    writeStored("klipski-theme", theme);
   }, [theme]);
 
-  // Navbar: si nasconde scorrendo in giù, riappare scorrendo in su.
-  useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y < 80) setHidden(false);
-      else if (y > last + 6) setHidden(true);
-      else if (y < last - 6) setHidden(false);
-      last = y;
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const nextLabel = theme === "dark" ? "Light mode" : "Dark mode";
 
   return (
     <>
-      <header className={`topbar${hidden ? " topbar--hidden" : ""}`}>
+      <header className="topbar">
         <div className="topbar-inner">
           <a className="brand" href="#top" aria-label={SITE.name}>
-            <Logo />
+            <span className="brand-mark" aria-hidden="true">K</span>
             <span>{SITE.name}</span>
           </a>
-          <nav className="topnav">
+          <nav className="topnav" aria-label={SITE.name}>
             <a href="#features">{t.nav.features}</a>
+            <a href="#install">{t.nav.install}</a>
             <a href={SITE.repo} target="_blank" rel="noreferrer noopener">
               GitHub
             </a>
+          </nav>
+          <div className="topbar-tools">
             <button
-              className="theme-toggle"
+              type="button"
+              className="tool-btn"
               onClick={() => setTheme((th) => (th === "dark" ? "light" : "dark"))}
-              aria-label={theme === "dark" ? "Light mode" : "Dark mode"}
-              title={theme === "dark" ? "Light mode" : "Dark mode"}
+              aria-label={nextLabel}
+              title={nextLabel}
             >
-              {theme === "dark" ? "☀" : "☾"}
+              {theme === "dark" ? <SunIcon /> : <MoonIcon />}
             </button>
-            <div className="lang-select">
-              <span aria-hidden="true">🌐</span>
+            <label className="lang-select">
+              <GlobeIcon />
               <select
+                id="lang"
                 value={lang}
                 onChange={(e) => setLang(e.target.value as typeof lang)}
                 aria-label="Language"
@@ -71,14 +64,15 @@ export default function App() {
                   </option>
                 ))}
               </select>
-            </div>
-          </nav>
+            </label>
+          </div>
         </div>
       </header>
 
       <main id="top">
         <Hero />
         <Features />
+        <Install />
       </main>
 
       <Footer />
@@ -86,12 +80,28 @@ export default function App() {
   );
 }
 
-function Logo() {
+function SunIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="5" y="3" width="14" height="18" rx="3" fill="currentColor" opacity="0.18" />
-      <rect x="8.5" y="2" width="7" height="4" rx="2" fill="currentColor" />
-      <path d="M9 11h6M9 14.5h6M9 18h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+    </svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" />
     </svg>
   );
 }

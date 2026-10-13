@@ -6,7 +6,13 @@ declare const process: { env: Record<string, string | undefined> };
 const version = process.env.npm_package_version ?? "1.0.0";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: "html-app-version",
+      transformIndexHtml: (html) => html.split("__APP_VERSION__").join(version),
+    },
+  ],
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },

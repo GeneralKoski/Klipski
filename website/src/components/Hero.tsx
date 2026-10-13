@@ -1,40 +1,52 @@
-import { MACOS_DOWNLOAD } from "../lib/config";
+import { useState } from "react";
+import { MACOS_DOWNLOAD, SITE } from "../lib/config";
 import { useI18n } from "../i18n";
+import { MenuMockup } from "./MenuMockup";
 
 export function Hero() {
   const { t } = useI18n();
+  const [run, setRun] = useState(0);
 
   return (
     <section className="hero">
-      <h1>{t.hero.tagline}</h1>
-      <p className="lede">{t.hero.lede}</p>
+      <div className="hero-copy">
+        <h1>{t.hero.tagline}</h1>
+        <p className="lede">{t.hero.lede}</p>
 
-      <div className="hero-cta">
-        <a className="btn btn-primary" href={MACOS_DOWNLOAD.url}>
-          {t.hero.download}
-          <span className="btn-sub">{MACOS_DOWNLOAD.format}</span>
-        </a>
+        <div className="hero-cta">
+          <a className="btn" href={MACOS_DOWNLOAD.url}>
+            <DownloadIcon />
+            <span>{t.hero.download}</span>
+            <span className="btn-meta">{SITE.version}</span>
+          </a>
+          <p className="hero-note">{t.hero.note}</p>
+        </div>
+
+        <button
+          type="button"
+          className="keys"
+          key={`keys-${run}`}
+          onClick={() => setRun((r) => r + 1)}
+        >
+          <span className="keys-caps" aria-hidden="true">
+            <kbd>⌘</kbd>
+            <kbd>⇧</kbd>
+            <kbd>V</kbd>
+          </span>
+          <span className="sr-only">Command Shift V</span>
+          <span className="keys-label">{t.hero.shortcut}</span>
+        </button>
       </div>
 
-      <div className="hero-window" aria-hidden="true">
-        <div className="hw-bar">
-          <span /><span /><span />
-        </div>
-        <div className="hw-body">
-          <div className="hw-side">
-            <p className="hw-group">{t.mockup.text}</p>
-            <p className="hw-item">Lorem ipsum dolor sit amet</p>
-            <p className="hw-item">https://klipski.martin-trajkovski.it</p>
-            <p className="hw-item active">npm install</p>
-            <p className="hw-group">{t.mockup.images}</p>
-            <p className="hw-item">screenshot-2026.png</p>
-          </div>
-          <div className="hw-main">
-            <p className="hw-kbd">⌘⇧V</p>
-            <p>{t.mockup.caption}</p>
-          </div>
-        </div>
-      </div>
+      <MenuMockup key={`menu-${run}`} />
     </section>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />
+    </svg>
   );
 }
