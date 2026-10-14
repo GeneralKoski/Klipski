@@ -15,7 +15,7 @@ export const SITE = {
   name: "Klipski",
   tagline: "Il gestore di appunti che mancava al tuo computer",
   description:
-    "Klipski è un clipboard manager leggero e nativo: cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico. Gratis e open source per macOS.",
+    "Klipski è un clipboard manager leggero e nativo: cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico. Gratis e open source per macOS e Windows.",
   url: "https://klipski.martin-trajkovski.it",
   repo: "https://github.com/GeneralKoski/Klipski",
   version: VERSION,
@@ -35,3 +35,20 @@ export const MACOS_DOWNLOAD: DownloadTarget = {
   format: ".dmg",
   url: env.VITE_DL_MACOS || ghAsset(`Klipski_${VERSION}.dmg`),
 };
+
+export const WINDOWS_DOWNLOAD: DownloadTarget = {
+  label: "Windows",
+  format: ".zip",
+  url: env.VITE_DL_WINDOWS || ghAsset(`Klipski_${VERSION}_windows_x64.zip`),
+};
+
+export type OS = "mac" | "win";
+
+// Sistema dell'utente, per mettere in evidenza il download giusto (null se non è né Mac né Windows).
+export function detectOS(): OS | null {
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+  const platform = (nav.userAgentData?.platform || navigator.userAgent).toLowerCase();
+  if (platform.includes("win")) return "win";
+  if (platform.includes("mac")) return "mac";
+  return null;
+}

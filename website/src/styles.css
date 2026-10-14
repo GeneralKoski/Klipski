@@ -220,6 +220,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
   align-items: center;
   gap: 10px;
   padding: 13px 18px;
+  border: 1px solid transparent;
   border-radius: 12px;
   background: var(--hl);
   color: var(--on-hl);
@@ -239,6 +240,15 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
   font-variant-numeric: tabular-nums;
 }
 .hero-note { margin: 0; font-size: 14px; color: var(--ink-2); }
+.dl-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn-alt {
+  background: var(--sheet);
+  color: var(--ink);
+  border: 1px solid var(--rule-strong);
+  box-shadow: none;
+}
+.btn-alt:hover { background: var(--sheet); border-color: var(--ink-2); }
+.btn-alt .btn-meta { border-inline-start-color: var(--rule-strong); }
 
 .keys {
   display: inline-flex;
@@ -473,6 +483,33 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
 .gtext p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
 
 /* ---------- Install ---------- */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  margin: -16px 0 36px;
+  padding: 3px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--hover);
+}
+.seg button {
+  padding: 6px 18px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.seg button:hover { color: var(--ink); }
+.seg button[aria-pressed="true"] {
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(20, 22, 34, 0.12), 0 0 0 0.5px var(--rule-strong);
+}
+.spec dd a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 .install-grid { display: grid; gap: 48px; align-items: start; }
 .steps {
   display: grid;
