@@ -9,6 +9,9 @@ default), snippet folders shown directly in the menu, a configurable global
 hotkey (`Cmd+Shift+V` by default), auto-paste, import of snippet folders from a
 Clipy XML export, and launch at login.
 
+A native Windows client with the same features lives in `windows/` (C#, .NET 8,
+WPF): see [windows/README.md](windows/README.md).
+
 ## Stack
 
 - Swift 6, macOS 14 or later
@@ -51,6 +54,6 @@ npm run dev
 
 Complete and working. Releases are automated in GitHub Actions: bumping the
 version in `website/package.json` and pushing to `main` creates the matching
-`vX.Y.Z` tag and publishes a release with the macOS DMG.
+`vX.Y.Z` tag and publishes a release with the macOS DMG and the Windows zip.
 
 Licensed under MIT.

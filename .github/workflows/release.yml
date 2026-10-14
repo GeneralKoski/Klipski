@@ -70,3 +70,37 @@ jobs:
           files: Klipski_*.dmg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Windows: client WPF (.NET 8), exe framework-dependent compresso in uno zip.
+  # Parte dopo il job macOS così la release (creata da quello) esiste già.
+  windows:
+    needs: [check, macos]
+    if: needs.check.outputs.release == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Test della logica
+        run: dotnet run -c Release --project windows/Tests/Tests.csproj
+
+      - name: Compila l'exe e crea lo zip
+        shell: pwsh
+        run: |
+          $version = "$env:TAG".TrimStart("v")
+          dotnet publish windows/Klipski.csproj -c Release -o publish -p:Version=$version
+          Compress-Archive -Path publish/Klipski.exe -DestinationPath "Klipski_${version}_windows_x64.zip"
+        env:
+          TAG: ${{ needs.check.outputs.tag }}
+
+      - name: Carica nella release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check.outputs.tag }}
+          draft: false
+          files: Klipski_*_windows_x64.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

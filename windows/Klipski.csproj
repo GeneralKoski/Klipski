@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <DebugType>none</DebugType>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Klipski.ico</ApplicationIcon>
+    <AssemblyName>Klipski</AssemblyName>
+    <RootNamespace>Klipski</RootNamespace>
+    <Version>1.0.10</Version>
+    <Product>Klipski</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Le stringhe dell'app macOS sono la fonte unica delle traduzioni. -->
+    <EmbeddedResource Include="..\Resources\**\Localizable.strings" LogicalName="%(RecursiveDir)Localizable.strings" />
+    <Resource Include="Klipski.ico" />
+    <Using Include="System.IO" />
+    <Compile Remove="Tests/**" />
+    <Page Remove="Tests/**" />
+  </ItemGroup>
+
+</Project>

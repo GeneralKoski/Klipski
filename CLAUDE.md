@@ -1,8 +1,9 @@
 # Klipski
 
-Clipboard manager. Due componenti nello stesso repo:
+Clipboard manager. Tre componenti nello stesso repo:
 
 - `Sources/Klipski/` - app macOS nativa (Swift/AppKit), build con `./build.sh`.
+- `windows/` - client Windows nativo (C#/.NET 8/WPF), stesso comportamento del Mac (lo Swift è la specifica), vedi `windows/README.md`.
 - `website/` - sito di presentazione (Vite + React), dominio `klipski.martin-trajkovski.it`.
 
 ## Release (importante)
@@ -18,7 +19,7 @@ Flusso per pubblicare una nuova versione:
 
 Il workflow legge la versione da `website/package.json` e, se il tag `vX.Y.Z`
 non esiste ancora, lo crea da solo e pubblica la GitHub Release con il DMG
-macOS. **Non creare il tag a mano.**
+macOS e lo zip Windows (`Klipski_X.Y.Z_windows_x64.zip`, job `windows` dopo quello macOS). **Non creare il tag a mano.**
 
 - Push su `main` **senza** bump di versione → nessuna release (il job `check` esce con `release=false`).
 - Il push di un tag `v*` a mano resta supportato come prima.

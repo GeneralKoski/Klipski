@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Test della logica pura (cronologia, snippet, impostazioni, backup) senza UI: dotnet run -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Klipski</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../AppPaths.cs;../Settings.cs;../HistoryStore.cs;../SnippetStore.cs;../Backup.cs;../Localization.cs;../Native.cs" />
+  </ItemGroup>
+
+</Project>
