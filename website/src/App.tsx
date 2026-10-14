@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SITE } from "./lib/config";
+import { SITE, detectOS, type OS } from "./lib/config";
 import { LANGS, readStored, useI18n, writeStored } from "./i18n";
 import { Hero } from "./components/Hero";
 import { Features } from "./components/Features";
@@ -17,6 +17,7 @@ function initialTheme(): Theme {
 export default function App() {
   const { t, lang, setLang } = useI18n();
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [os, setOs] = useState<OS>(() => detectOS() ?? "mac");
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -70,9 +71,9 @@ export default function App() {
       </header>
 
       <main id="top">
-        <Hero />
+        <Hero onDownload={setOs} />
         <Features />
-        <Install />
+        <Install os={os} setOs={setOs} />
       </main>
 
       <Footer />

@@ -241,14 +241,11 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
 }
 .hero-note { margin: 0; font-size: 14px; color: var(--ink-2); }
 .dl-row { display: flex; flex-wrap: wrap; gap: 10px; }
-.btn-alt {
   background: var(--sheet);
   color: var(--ink);
   border: 1px solid var(--rule-strong);
   box-shadow: none;
 }
-.btn-alt:hover { background: var(--sheet); border-color: var(--ink-2); }
-.btn-alt .btn-meta { border-inline-start-color: var(--rule-strong); }
 
 .keys {
   display: inline-flex;
@@ -417,6 +414,22 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
   color: var(--menu-ink-2);
   font-size: 13px;
 }
+.m-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--menu-ink);
+  font: inherit;
+  outline: none;
+}
+.m-search input::placeholder { color: var(--menu-ink-2); }
+.m-img { height: 40px; }
+.m-thumb { flex: none; width: 44px; height: 30px; margin-inline-end: 8px; border-radius: 4px; }
+.m-empty { color: var(--menu-ink-2); }
+.menus.is-live .menu-sub { animation-delay: 0ms; animation-duration: 140ms; }
+.menus.is-live .m-row { animation: none; }
 
 /* ---------- Sections ---------- */
 .section { padding-block: 88px 24px; }

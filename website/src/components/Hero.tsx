@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { MACOS_DOWNLOAD, WINDOWS_DOWNLOAD, detectOS } from "../lib/config";
+import { MACOS_DOWNLOAD, WINDOWS_DOWNLOAD, detectOS, type OS } from "../lib/config";
 import { fmt, useI18n } from "../i18n";
 import { MenuMockup } from "./MenuMockup";
 
-export function Hero() {
+export function Hero({ onDownload }: { onDownload: (os: OS) => void }) {
   const { t } = useI18n();
   const [run, setRun] = useState(0);
-  const mac = { name: "macOS", ...MACOS_DOWNLOAD };
-  const win = { name: "Windows", ...WINDOWS_DOWNLOAD };
-  const downloads = detectOS() === "win" ? [win, mac] : [mac, win];
+  const os = detectOS() ?? "mac";
+  const d = os === "win" ? { name: "Windows", ...WINDOWS_DOWNLOAD } : { name: "macOS", ...MACOS_DOWNLOAD };
 
   return (
     <section className="hero">
@@ -18,13 +17,11 @@ export function Hero() {
 
         <div className="hero-cta">
           <div className="dl-row">
-            {downloads.map((d, i) => (
-              <a className={i === 0 ? "btn" : "btn btn-alt"} href={d.url} key={d.name}>
-                <DownloadIcon />
-                <span>{fmt(t.hero.downloadFor, { os: d.name })}</span>
-                <span className="btn-meta">{d.format}</span>
-              </a>
-            ))}
+            <a className="btn" href="#install" onClick={() => onDownload(os)}>
+              <DownloadIcon />
+              <span>{fmt(t.hero.downloadFor, { os: d.name })}</span>
+              <span className="btn-meta">{d.format}</span>
+            </a>
           </div>
           <p className="hero-note">{t.hero.note}</p>
         </div>

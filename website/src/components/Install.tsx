@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { MACOS_DOWNLOAD, WINDOWS_DOWNLOAD, detectOS, type OS } from "../lib/config";
+import { MACOS_DOWNLOAD, WINDOWS_DOWNLOAD, type OS } from "../lib/config";
 import { useI18n } from "../i18n";
 
 const TABS: { os: OS; name: string }[] = [
@@ -7,9 +6,8 @@ const TABS: { os: OS; name: string }[] = [
   { os: "win", name: "Windows" },
 ];
 
-export function Install() {
+export function Install({ os, setOs }: { os: OS; setOs: (os: OS) => void }) {
   const { t } = useI18n();
-  const [os, setOs] = useState<OS>(() => detectOS() ?? "mac");
   const { steps, specs } = t.install[os];
   const [first, ...rest] = steps;
   const download = os === "win" ? WINDOWS_DOWNLOAD : MACOS_DOWNLOAD;
