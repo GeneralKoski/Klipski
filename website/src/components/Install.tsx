@@ -39,6 +39,11 @@ export function Install({ os, setOs }: { os: OS; setOs: (os: OS) => void }) {
             <li className="step" key={s.title}>
               <h3>{s.title}</h3>
               <p>{s.body}</p>
+              {s.code && (
+                <pre className="step-code">
+                  <code>{s.code}</code>
+                </pre>
+              )}
             </li>
           ))}
         </ol>

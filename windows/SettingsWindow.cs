@@ -311,7 +311,7 @@ sealed class SettingsWindow : Window
         var modifiers = (keys.HasFlag(ModifierKeys.Control) ? Native.MOD_CONTROL : 0) |
                         (keys.HasFlag(ModifierKeys.Alt) ? Native.MOD_ALT : 0) |
                         (keys.HasFlag(ModifierKeys.Shift) ? Native.MOD_SHIFT : 0) |
-                        (keys.HasFlag(ModifierKeys.Windows) ? Native.MOD_WIN : 0);
+                        (Keyboard.IsKeyDown(Key.LWin) || Keyboard.IsKeyDown(Key.RWin) ? Native.MOD_WIN : 0); // Keyboard.Modifiers non riporta mai il tasto Win
         if (modifiers == 0)
         {
             System.Media.SystemSounds.Beep.Play(); // serve almeno un modificatore

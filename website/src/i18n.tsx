@@ -6,7 +6,18 @@ export type Lang =
 interface Item {
   title: string;
   body: string;
+  code?: string;
 }
+
+const HOTKEYS_KEY = `"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced"`;
+
+const winV = (free: string, restore: string) => `# ${free}
+reg add ${HOTKEYS_KEY} /v DisabledHotkeys /t REG_SZ /d V /f
+Stop-Process -Name explorer -Force
+
+# ${restore}
+reg delete ${HOTKEYS_KEY} /v DisabledHotkeys /f
+Stop-Process -Name explorer -Force`;
 
 export interface Spec {
   label: string;
@@ -127,6 +138,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Scarica lo zip", body: "Estrai Klipski.exe in una cartella a tua scelta e avvialo. Serve il .NET 8 Desktop Runtime: se manca, Windows lo propone al primo avvio." },
           { title: "Esegui comunque", body: "L'exe non è firmato, quindi SmartScreen può mostrare «Windows ha protetto il PC»: fai clic su Ulteriori informazioni e poi su Esegui comunque." },
           { title: "Apri il menu", body: "Klipski resta nell'area di notifica: apri il menu con Ctrl+Shift+V o con un clic sull'icona. In Chrome, Edge e VS Code quella combinazione incolla come testo semplice: se ti serve, scegline un'altra in Personalizza…" },
+          { title: "Usa Win+V (facoltativo)", body: "Windows riserva Win+V alla sua cronologia degli appunti. Per assegnarlo a Klipski esegui questi comandi in PowerShell (non servono i diritti di amministratore), poi in Personalizza… premi Win+V. Il riavvio di Esplora risorse chiude le finestre delle cartelle aperte.", code: winV("Libera Win+V", "Per tornare alla cronologia degli appunti di Windows") },
         ],
         specs: [
           { label: "Sistema", value: "Windows 10 o 11 a 64 bit" },
@@ -203,6 +215,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Download the zip", body: "Extract Klipski.exe to any folder and run it. It needs the .NET 8 Desktop Runtime: if it is missing, Windows offers it on first launch." },
           { title: "Run anyway", body: "The exe is not signed, so SmartScreen may show “Windows protected your PC”: click More info, then Run anyway." },
           { title: "Open the menu", body: "Klipski stays in the notification area: open the menu with Ctrl+Shift+V or by clicking the icon. In Chrome, Edge and VS Code that combination pastes as plain text; if you need it, pick another one in Customize…" },
+          { title: "Use Win+V (optional)", body: "Windows reserves Win+V for its own clipboard history. To give it to Klipski, run these commands in PowerShell (no admin rights needed), then press Win+V in Customize… Restarting Explorer closes any open folder windows.", code: winV("Free up Win+V", "To go back to the Windows clipboard history") },
         ],
         specs: [
           { label: "System", value: "64-bit Windows 10 or 11" },
@@ -279,6 +292,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Descarga el zip", body: "Extrae Klipski.exe en la carpeta que quieras y ábrelo. Necesita .NET 8 Desktop Runtime: si falta, Windows lo ofrece en el primer arranque." },
           { title: "Ejecutar de todas formas", body: "El exe no está firmado, así que SmartScreen puede mostrar «Windows protegió su PC»: haz clic en Más información y luego en Ejecutar de todas formas." },
           { title: "Abre el menú", body: "Klipski queda en el área de notificación: abre el menú con Ctrl+Shift+V o con un clic en el icono. En Chrome, Edge y VS Code esa combinación pega como texto sin formato; si la necesitas, elige otra en Personalizar…" },
+          { title: "Usa Win+V (opcional)", body: "Windows reserva Win+V para su propio historial del portapapeles. Para asignarlo a Klipski, ejecuta estos comandos en PowerShell (no hacen falta permisos de administrador) y luego pulsa Win+V en Personalizar… Reiniciar el Explorador cierra las ventanas de carpetas abiertas.", code: winV("Libera Win+V", "Para volver al historial del portapapeles de Windows") },
         ],
         specs: [
           { label: "Sistema", value: "Windows 10 u 11 de 64 bits" },
@@ -355,6 +369,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Téléchargez le zip", body: "Extrayez Klipski.exe dans le dossier de votre choix et lancez-le. Il nécessite .NET 8 Desktop Runtime : s'il manque, Windows le propose au premier lancement." },
           { title: "Exécuter quand même", body: "L'exe n'est pas signé, donc SmartScreen peut afficher « Windows a protégé votre ordinateur » : cliquez sur Informations complémentaires, puis sur Exécuter quand même." },
           { title: "Ouvrez le menu", body: "Klipski reste dans la zone de notification : ouvrez le menu avec Ctrl+Maj+V ou d'un clic sur l'icône. Dans Chrome, Edge et VS Code, cette combinaison colle en texte brut ; si vous en avez besoin, choisissez-en une autre dans Personnaliser…" },
+          { title: "Utilisez Win+V (facultatif)", body: "Windows réserve Win+V à son propre historique du presse-papiers. Pour l'attribuer à Klipski, exécutez ces commandes dans PowerShell (pas besoin de droits administrateur), puis appuyez sur Win+V dans Personnaliser… Le redémarrage de l'Explorateur ferme les fenêtres de dossiers ouvertes.", code: winV("Libérer Win+V", "Pour revenir à l'historique du presse-papiers de Windows") },
         ],
         specs: [
           { label: "Système", value: "Windows 10 ou 11 64 bits" },
@@ -431,6 +446,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "ZIP herunterladen", body: "Entpacke Klipski.exe in einen beliebigen Ordner und starte es. Benötigt wird die .NET 8 Desktop Runtime: Fehlt sie, bietet Windows sie beim ersten Start an." },
           { title: "Trotzdem ausführen", body: "Die exe ist nicht signiert, daher kann SmartScreen „Der Computer wurde durch Windows geschützt“ anzeigen: Klicke auf Weitere Informationen und dann auf Trotzdem ausführen." },
           { title: "Menü öffnen", body: "Klipski bleibt im Infobereich: Öffne das Menü mit Strg+Umschalt+V oder per Klick auf das Symbol. In Chrome, Edge und VS Code fügt diese Kombination als reinen Text ein; wenn du sie brauchst, wähle unter Anpassen… eine andere." },
+          { title: "Win+V verwenden (optional)", body: "Windows reserviert Win+V für den eigenen Zwischenablageverlauf. Um es Klipski zuzuweisen, führe diese Befehle in PowerShell aus (keine Administratorrechte nötig) und drücke dann unter Anpassen… Win+V. Der Neustart des Explorers schließt geöffnete Ordnerfenster.", code: winV("Win+V freigeben", "Zurück zum Zwischenablageverlauf von Windows") },
         ],
         specs: [
           { label: "System", value: "Windows 10 oder 11 (64 Bit)" },
@@ -507,6 +523,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Baixe o zip", body: "Extraia o Klipski.exe em qualquer pasta e abra. É preciso o .NET 8 Desktop Runtime: se faltar, o Windows oferece na primeira abertura." },
           { title: "Executar assim mesmo", body: "O exe não é assinado, então o SmartScreen pode mostrar «O Windows protegeu o computador»: clique em Mais informações e depois em Executar assim mesmo." },
           { title: "Abra o menu", body: "O Klipski fica na área de notificação: abra o menu com Ctrl+Shift+V ou clicando no ícone. No Chrome, Edge e VS Code essa combinação cola como texto simples; se precisar dela, escolha outra em Personalizar…" },
+          { title: "Use Win+V (opcional)", body: "O Windows reserva Win+V para o próprio histórico da área de transferência. Para atribuí-lo ao Klipski, execute estes comandos no PowerShell (não são precisas permissões de administrador) e depois prima Win+V em Personalizar… Reiniciar o Explorador fecha as janelas de pastas abertas.", code: winV("Libertar Win+V", "Para voltar ao histórico da área de transferência do Windows") },
         ],
         specs: [
           { label: "Sistema", value: "Windows 10 ou 11 de 64 bits" },
@@ -583,6 +600,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "Скачайте zip", body: "Распакуйте Klipski.exe в любую папку и запустите. Нужна среда .NET 8 Desktop Runtime: если её нет, Windows предложит установить её при первом запуске." },
           { title: "Выполнить в любом случае", body: "Exe не подписан, поэтому SmartScreen может показать «Система Windows защитила ваш компьютер»: нажмите «Подробнее», затем «Выполнить в любом случае»." },
           { title: "Откройте меню", body: "Klipski живёт в области уведомлений: откройте меню сочетанием Ctrl+Shift+V или щелчком по значку. В Chrome, Edge и VS Code это сочетание вставляет текст без форматирования; если оно вам нужно, выберите другое в «Настроить…»." },
+          { title: "Используйте Win+V (необязательно)", body: "Windows резервирует Win+V для собственного журнала буфера обмена. Чтобы назначить это сочетание Klipski, выполните эти команды в PowerShell (права администратора не нужны), затем нажмите Win+V в разделе Настроить… Перезапуск Проводника закроет открытые окна папок.", code: winV("Освободить Win+V", "Вернуть журнал буфера обмена Windows") },
         ],
         specs: [
           { label: "Система", value: "64-битная Windows 10 или 11" },
@@ -659,6 +677,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "zip をダウンロード", body: "Klipski.exe を任意のフォルダーに展開して起動します。.NET 8 デスクトップ ランタイムが必要です。ない場合は初回起動時に Windows がインストールを案内します。" },
           { title: "実行", body: "exe は署名されていないため、SmartScreen が「Windows によって PC が保護されました」と表示することがあります。「詳細情報」をクリックしてから「実行」を選んでください。" },
           { title: "メニューを開く", body: "Klipski は通知領域に常駐します。Ctrl+Shift+V またはアイコンのクリックでメニューを開きます。Chrome、Edge、VS Code ではこの組み合わせが書式なし貼り付けに使われているので、必要ならカスタマイズ…で別の組み合わせを選んでください。" },
+          { title: "Win+V を使う（任意）", body: "Windows は Win+V を独自のクリップボード履歴に割り当てています。Klipski で使うには、PowerShell で次のコマンドを実行し（管理者権限は不要）、カスタマイズ…で Win+V を押してください。エクスプローラーを再起動すると、開いているフォルダーのウィンドウは閉じます。", code: winV("Win+V を解放する", "Windows のクリップボード履歴に戻す") },
         ],
         specs: [
           { label: "システム", value: "64 ビット版 Windows 10 / 11" },
@@ -735,6 +754,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "下载 zip", body: "将 Klipski.exe 解压到任意文件夹并运行。需要 .NET 8 桌面运行时：如果缺少，Windows 会在首次启动时提示安装。" },
           { title: "仍要运行", body: "该 exe 未签名，SmartScreen 可能会显示“Windows 已保护你的电脑”：点击“更多信息”，再点击“仍要运行”。" },
           { title: "打开菜单", body: "Klipski 常驻通知区域：按 Ctrl+Shift+V 或点击图标即可打开菜单。在 Chrome、Edge 和 VS Code 中该组合键用于粘贴纯文本，如有需要，请在“自定义…”中另选组合键。" },
+          { title: "使用 Win+V（可选）", body: "Windows 将 Win+V 保留给自带的剪贴板历史记录。要将其分配给 Klipski，请在 PowerShell 中运行以下命令（无需管理员权限），然后在“自定义…”中按下 Win+V。重启资源管理器会关闭已打开的文件夹窗口。", code: winV("释放 Win+V", "恢复 Windows 剪贴板历史记录") },
         ],
         specs: [
           { label: "系统", value: "64 位 Windows 10 或 11" },
@@ -811,6 +831,7 @@ export const DICTS: Record<Lang, Dict> = {
           { title: "نزّل ملف zip", body: "استخرج Klipski.exe في أي مجلد وشغّله. يحتاج إلى .NET 8 Desktop Runtime، وإن لم يكن مثبتًا يعرضه Windows عند التشغيل الأول." },
           { title: "تشغيل على أي حال", body: "ملف exe غير موقّع، لذلك قد يعرض SmartScreen رسالة «قام Windows بحماية الكمبيوتر»: انقر «مزيد من المعلومات» ثم «تشغيل على أي حال»." },
           { title: "افتح القائمة", body: "يبقى كليبسكي في منطقة الإشعارات: افتح القائمة بـ Ctrl+Shift+V أو بالنقر على الأيقونة. في Chrome وEdge وVS Code تلصق هذه التركيبة نصًا عاديًا، فإن احتجت إليها فاختر تركيبة أخرى من «تخصيص…»." },
+          { title: "استخدم Win+V (اختياري)", body: "يحجز Windows الاختصار Win+V لسجل الحافظة الخاص به. لتعيينه إلى كليبسكي شغّل هذه الأوامر في PowerShell (لا حاجة لصلاحيات المسؤول)، ثم اضغط Win+V في «تخصيص…». تؤدي إعادة تشغيل مستكشف الملفات إلى إغلاق نوافذ المجلدات المفتوحة.", code: winV("تحرير Win+V", "للعودة إلى سجل حافظة Windows") },
         ],
         specs: [
           { label: "النظام", value: "Windows 10 أو 11 بنظام 64 بت" },
