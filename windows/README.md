@@ -11,9 +11,9 @@ menu and settings as the macOS app in `../Sources/Klipski`, which is the spec.
 - Choosing an item writes plain text (or the image) to the clipboard, gives the
   focus back to the previous window and, with Paste automatically on, sends
   `Ctrl+V`. Pasted snippets are added to the history.
-- Entries that password managers mark as private
-  (`ExcludeClipboardContentFromMonitorProcessing`,
-  `CanIncludeInClipboardHistory=0`, `CanUploadToCloudClipboard=0`) are kept
+- Content marked `ExcludeClipboardContentFromMonitorProcessing` is ignored
+  completely, as Microsoft recommends. Entries marked
+  `CanIncludeInClipboardHistory=0` or `CanUploadToCloudClipboard=0` are kept
   but shown masked, like `ConcealedType` on the Mac.
 - Backup and restore use the same `Klipski-backup.json` as the Mac, so a
   backup moves between the two. The shortcut is mapped Ctrl ↔ ⌘, Alt ↔ ⌥,

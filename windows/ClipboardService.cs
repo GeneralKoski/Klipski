@@ -93,6 +93,8 @@ sealed class ClipboardService
         if (!Open()) return;
         try
         {
+            // Come chiede Microsoft, il contenuto marcato Exclude non va nemmeno letto.
+            if (Native.IsClipboardFormatAvailable(CF_EXCLUDE)) return;
             concealed = IsConcealed();
             file = ImageFile();
             text = ReadText();
@@ -134,7 +136,6 @@ sealed class ClipboardService
 
     private static bool IsConcealed()
     {
-        if (Native.IsClipboardFormatAvailable(CF_EXCLUDE)) return true;
         foreach (var format in new[] { CF_HISTORY, CF_CLOUD })
         {
             if (ReadBytes(format) is { Length: >= 4 } value && BitConverter.ToInt32(value, 0) == 0) return true;
