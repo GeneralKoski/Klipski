@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { MACOS_DOWNLOAD, WINDOWS_DOWNLOAD, detectOS, type OS } from "../lib/config";
 import { fmt, useI18n } from "../i18n";
 import { MenuMockup } from "./MenuMockup";
 
 export function Hero({ onDownload }: { onDownload: (os: OS) => void }) {
   const { t } = useI18n();
-  const [run, setRun] = useState(0);
   const os = detectOS() ?? "mac";
   const d = os === "win" ? { name: "Windows", ...WINDOWS_DOWNLOAD } : { name: "macOS", ...MACOS_DOWNLOAD };
 
@@ -25,24 +23,9 @@ export function Hero({ onDownload }: { onDownload: (os: OS) => void }) {
           </div>
           <p className="hero-note">{t.hero.note}</p>
         </div>
-
-        <button
-          type="button"
-          className="keys"
-          key={`keys-${run}`}
-          onClick={() => setRun((r) => r + 1)}
-        >
-          <span className="keys-caps" aria-hidden="true">
-            <kbd>⌘</kbd>
-            <kbd>⇧</kbd>
-            <kbd>V</kbd>
-          </span>
-          <span className="sr-only">Command Shift V</span>
-          <span className="keys-label">{t.hero.shortcut}</span>
-        </button>
       </div>
 
-      <MenuMockup key={`menu-${run}`} />
+      <MenuMockup />
     </section>
   );
 }

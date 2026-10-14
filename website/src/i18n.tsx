@@ -26,7 +26,6 @@ export interface Dict {
     lede: string;
     downloadFor: string;
     note: string;
-    shortcut: string;
   };
   mockup: {
     text: string;
@@ -71,7 +70,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski è un clipboard manager leggero e nativo: cronologia di testi e immagini, snippet a cartelle, hotkey globale e incolla automatico. Gratis e open source per macOS e Windows.",
       downloadFor: "Scarica per {os}",
       note: "Gratis e open source. macOS 14 o successivo su Apple silicon, Windows 10 o 11 a 64 bit.",
-      shortcut: "apre Klipski da qualsiasi app (Ctrl+Shift+V su Windows)",
     },
     mockup: {
       text: "Testi", images: "Immagini", search: "Cerca…", folder: "Esempi",
@@ -148,7 +146,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski is a lightweight, native clipboard manager: history of text and images, folder snippets, a global hotkey and auto-paste. Free and open source for macOS and Windows.",
       downloadFor: "Download for {os}",
       note: "Free and open source. macOS 14 or later on Apple silicon, 64-bit Windows 10 or 11.",
-      shortcut: "opens Klipski from any app (Ctrl+Shift+V on Windows)",
     },
     mockup: {
       text: "Text", images: "Images", search: "Search…", folder: "Examples",
@@ -225,7 +222,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski es un gestor de portapapeles ligero y nativo: historial de textos e imágenes, snippets en carpetas, atajo global y pegado automático. Gratis y de código abierto para macOS y Windows.",
       downloadFor: "Descargar para {os}",
       note: "Gratis y de código abierto. macOS 14 o posterior con Apple silicon, Windows 10 u 11 de 64 bits.",
-      shortcut: "abre Klipski desde cualquier app (Ctrl+Shift+V en Windows)",
     },
     mockup: {
       text: "Textos", images: "Imágenes", search: "Buscar…", folder: "Ejemplos",
@@ -302,7 +298,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski est un gestionnaire de presse-papiers léger et natif : historique de textes et d'images, snippets en dossiers, raccourci global et collage automatique. Gratuit et open source pour macOS et Windows.",
       downloadFor: "Télécharger pour {os}",
       note: "Gratuit et open source. macOS 14 ou ultérieur sur Apple silicon, Windows 10 ou 11 64 bits.",
-      shortcut: "ouvre Klipski depuis n'importe quelle app (Ctrl+Maj+V sous Windows)",
     },
     mockup: {
       text: "Textes", images: "Images", search: "Rechercher…", folder: "Exemples",
@@ -379,7 +374,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski ist ein leichter, nativer Zwischenablage-Manager: Verlauf von Texten und Bildern, Snippets in Ordnern, globaler Hotkey und automatisches Einfügen. Kostenlos und Open Source für macOS und Windows.",
       downloadFor: "Für {os} herunterladen",
       note: "Kostenlos und Open Source. macOS 14 oder neuer mit Apple Silicon, Windows 10 oder 11 (64 Bit).",
-      shortcut: "öffnet Klipski aus jeder App (Strg+Umschalt+V unter Windows)",
     },
     mockup: {
       text: "Texte", images: "Bilder", search: "Suchen…", folder: "Beispiele",
@@ -456,7 +450,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "O Klipski é um gerenciador de área de transferência leve e nativo: histórico de textos e imagens, snippets em pastas, atalho global e colagem automática. Grátis e de código aberto para macOS e Windows.",
       downloadFor: "Baixar para {os}",
       note: "Grátis e de código aberto. macOS 14 ou posterior com Apple silicon, Windows 10 ou 11 de 64 bits.",
-      shortcut: "abre o Klipski em qualquer app (Ctrl+Shift+V no Windows)",
     },
     mockup: {
       text: "Textos", images: "Imagens", search: "Buscar…", folder: "Exemplos",
@@ -533,7 +526,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski - это лёгкий нативный менеджер буфера обмена: история текстов и изображений, сниппеты по папкам, глобальная горячая клавиша и автоматическая вставка. Бесплатно и с открытым кодом для macOS и Windows.",
       downloadFor: "Скачать для {os}",
       note: "Бесплатно, с открытым кодом. macOS 14 или новее на Apple silicon, 64-битная Windows 10 или 11.",
-      shortcut: "открывает Klipski из любого приложения (Ctrl+Shift+V в Windows)",
     },
     mockup: {
       text: "Тексты", images: "Изображения", search: "Поиск…", folder: "Примеры",
@@ -610,7 +602,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski は軽量でネイティブなクリップボードマネージャーです。テキストと画像の履歴、フォルダー別スニペット、グローバルホットキー、自動貼り付けに対応。macOS と Windows 向けに無料・オープンソースで提供。",
       downloadFor: "{os} 版をダウンロード",
       note: "無料・オープンソース。Apple シリコン搭載の macOS 14 以降、64 ビット版 Windows 10 / 11 に対応。",
-      shortcut: "どのアプリからでも Klipski を開く（Windows では Ctrl+Shift+V）",
     },
     mockup: {
       text: "テキスト", images: "画像", search: "検索…", folder: "例",
@@ -687,7 +678,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "Klipski 是一款轻量的原生剪贴板管理器：文本与图片历史、文件夹代码片段、全局快捷键和自动粘贴。面向 macOS 和 Windows，免费且开源。",
       downloadFor: "下载 {os} 版",
       note: "免费开源。支持搭载 Apple 芯片的 macOS 14 或更高版本，以及 64 位 Windows 10 和 11。",
-      shortcut: "在任意应用中打开 Klipski（Windows 上为 Ctrl+Shift+V）",
     },
     mockup: {
       text: "文本", images: "图片", search: "搜索…", folder: "示例",
@@ -764,7 +754,6 @@ export const DICTS: Record<Lang, Dict> = {
       lede: "كليبسكي مدير حافظة خفيف وأصلي: سجل للنصوص والصور، ومقتطفات ضمن مجلدات، واختصار عام، ولصق تلقائي. مجاني ومفتوح المصدر لنظامي macOS وWindows.",
       downloadFor: "تنزيل لنظام {os}",
       note: "مجاني ومفتوح المصدر. macOS 14 أو أحدث على Apple silicon، وWindows 10 أو 11 بنظام 64 بت.",
-      shortcut: "يفتح كليبسكي من أي تطبيق (Ctrl+Shift+V على Windows)",
     },
     mockup: {
       text: "نصوص", images: "صور", search: "بحث…", folder: "أمثلة",

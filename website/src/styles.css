@@ -28,8 +28,6 @@
   --menu-rule: rgba(20, 22, 34, 0.1);
   --field-bg: rgba(20, 22, 34, 0.05);
   --menu-shadow: 0 0 0 0.5px rgba(20, 22, 34, 0.18), 0 12px 32px -8px rgba(30, 32, 60, 0.35);
-  --key-top: #ffffff;
-  --key-edge: #c3c8d4;
 
   --c-blue: #0a7aff;
   --c-teal: #0e9fb8;
@@ -76,8 +74,6 @@ html[data-theme="dark"] {
   --field-bg: rgba(255, 255, 255, 0.07);
   --menu-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.6), inset 0 0 0 0.5px rgba(255, 255, 255, 0.12),
     0 14px 36px -8px rgba(0, 0, 0, 0.7);
-  --key-top: #252836;
-  --key-edge: #0b0c12;
   color-scheme: dark;
 }
 
@@ -94,14 +90,6 @@ body {
 }
 a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
 
 /* ---------- Topbar ---------- */
 .topbar {
@@ -245,47 +233,6 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
   color: var(--ink);
   border: 1px solid var(--rule-strong);
   box-shadow: none;
-}
-
-.keys {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  margin-top: 36px;
-  margin-inline-start: -6px;
-  padding: 6px;
-  border: 0;
-  border-radius: 10px;
-  background: none;
-  color: var(--ink-2);
-  font: inherit;
-  font-size: 15px;
-  text-align: start;
-  cursor: pointer;
-}
-.keys:hover .keys-label { color: var(--ink); }
-.keys-caps { display: inline-flex; gap: 6px; }
-.keys kbd {
-  display: inline-grid;
-  place-items: center;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 9px;
-  border: 1px solid var(--key-edge);
-  border-radius: 8px;
-  background: var(--key-top);
-  box-shadow: 0 2px 0 var(--key-edge);
-  color: var(--ink);
-  font: 500 16px/1 var(--text);
-  animation: press 260ms ease both;
-}
-.keys kbd:nth-child(1) { animation-delay: 250ms; }
-.keys kbd:nth-child(2) { animation-delay: 380ms; }
-.keys kbd:nth-child(3) { animation-delay: 510ms; }
-@keyframes press {
-  0%, 100% { transform: translateY(0); box-shadow: 0 2px 0 var(--key-edge); }
-  45% { transform: translateY(2px); box-shadow: 0 0 0 var(--key-edge); }
 }
 
 /* ---------- Menu mockup ---------- */
