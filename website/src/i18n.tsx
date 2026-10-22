@@ -57,7 +57,7 @@ export interface Dict {
     mac: Platform;
     win: Platform;
   };
-  footer: { meta: string };
+  footer: { meta: string; privacy: string };
 }
 
 export const LANGS: { code: Lang; label: string; dir: "ltr" | "rtl" }[] = [
@@ -149,7 +149,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Versione {version} per macOS e Windows. Open source, licenza MIT." },
+    footer: { meta: "Versione {version} per macOS e Windows. Open source, licenza MIT.", privacy: "Questo sito usa Hydran, un'analitica senza cookie, per contare visite ed errori. Non salva il tuo indirizzo IP: conserva solo un identificativo anonimo nel browser (localStorage)." },
   },
   en: {
     nav: { features: "Features", install: "Install" },
@@ -226,7 +226,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Version {version} for macOS and Windows. Open source, MIT license." },
+    footer: { meta: "Version {version} for macOS and Windows. Open source, MIT license.", privacy: "This site uses Hydran, a cookie-free analytics tool, to count visits and errors. It does not store your IP address: it only keeps an anonymous ID in your browser (localStorage)." },
   },
   es: {
     nav: { features: "Funciones", install: "Instalación" },
@@ -303,7 +303,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Versión {version} para macOS y Windows. Código abierto, licencia MIT." },
+    footer: { meta: "Versión {version} para macOS y Windows. Código abierto, licencia MIT.", privacy: "Este sitio usa Hydran, una analítica sin cookies, para contar visitas y errores. No guarda tu dirección IP: solo conserva un identificador anónimo en tu navegador (localStorage)." },
   },
   fr: {
     nav: { features: "Fonctions", install: "Installation" },
@@ -380,7 +380,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Version {version} pour macOS et Windows. Open source, licence MIT." },
+    footer: { meta: "Version {version} pour macOS et Windows. Open source, licence MIT.", privacy: "Ce site utilise Hydran, un outil d'analyse sans cookies, pour compter les visites et les erreurs. Il n'enregistre pas votre adresse IP : il conserve seulement un identifiant anonyme dans votre navigateur (localStorage)." },
   },
   de: {
     nav: { features: "Funktionen", install: "Installation" },
@@ -457,7 +457,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Version {version} für macOS und Windows. Open Source, MIT-Lizenz." },
+    footer: { meta: "Version {version} für macOS und Windows. Open Source, MIT-Lizenz.", privacy: "Diese Website nutzt Hydran, ein Analysetool ohne Cookies, um Besuche und Fehler zu zählen. Deine IP-Adresse wird nicht gespeichert: Im Browser liegt nur eine anonyme Kennung (localStorage)." },
   },
   pt: {
     nav: { features: "Funções", install: "Instalação" },
@@ -534,7 +534,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Versão {version} para macOS e Windows. Código aberto, licença MIT." },
+    footer: { meta: "Versão {version} para macOS e Windows. Código aberto, licença MIT.", privacy: "Este site usa o Hydran, uma análise sem cookies, para contar visitas e erros. Não guarda o seu endereço IP: guarda apenas um identificador anónimo no navegador (localStorage)." },
   },
   ru: {
     nav: { features: "Возможности", install: "Установка" },
@@ -611,7 +611,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "Версия {version} для macOS и Windows. Открытый код, лицензия MIT." },
+    footer: { meta: "Версия {version} для macOS и Windows. Открытый код, лицензия MIT.", privacy: "Этот сайт использует Hydran, аналитику без cookie, чтобы считать посещения и ошибки. IP-адрес не сохраняется: в браузере хранится только анонимный идентификатор (localStorage)." },
   },
   ja: {
     nav: { features: "機能", install: "インストール" },
@@ -688,7 +688,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "macOS・Windows 版 バージョン {version}。オープンソース（MIT ライセンス）。" },
+    footer: { meta: "macOS・Windows 版 バージョン {version}。オープンソース（MIT ライセンス）。", privacy: "このサイトは、訪問数とエラーを数えるために Cookie を使わない解析ツール Hydran を使っています。IP アドレスは保存せず、ブラウザ (localStorage) に匿名の ID だけを保持します。" },
   },
   "zh-Hans": {
     nav: { features: "功能", install: "安装" },
@@ -765,7 +765,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "macOS 和 Windows 版本 {version}。开源，MIT 许可证。" },
+    footer: { meta: "macOS 和 Windows 版本 {version}。开源，MIT 许可证。", privacy: "本网站使用无需 Cookie 的分析工具 Hydran 来统计访问和错误。我们不保存你的 IP 地址，只在浏览器 (localStorage) 中保留一个匿名标识。" },
   },
   ar: {
     nav: { features: "المزايا", install: "التثبيت" },
@@ -842,7 +842,7 @@ export const DICTS: Record<Lang, Dict> = {
         ],
       },
     },
-    footer: { meta: "الإصدار {version} لنظامي macOS وWindows. مفتوح المصدر بترخيص MIT." },
+    footer: { meta: "الإصدار {version} لنظامي macOS وWindows. مفتوح المصدر بترخيص MIT.", privacy: "يستخدم هذا الموقع Hydran، وهو أداة تحليلات بدون ملفات تعريف ارتباط، لإحصاء الزيارات والأخطاء. لا يحفظ عنوان IP الخاص بك، ويحتفظ فقط بمعرّف مجهول في المتصفح (localStorage)." },
   },
 };
 

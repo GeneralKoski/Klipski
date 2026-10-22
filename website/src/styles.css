@@ -539,6 +539,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
 .footer-meta { flex: 1 1 260px; margin: 0; font-size: 14px; color: var(--ink-2); }
 .footer-nav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--ink-2); }
 .footer-nav a:hover { color: var(--ink); }
+.footer-privacy { flex: 1 0 100%; margin: 0; font-size: 13px; color: var(--ink-2); }
 
 /* ---------- Breakpoints ---------- */
 @media (min-width: 1000px) {

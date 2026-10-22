@@ -18,6 +18,7 @@ export function Footer() {
             GitHub
           </a>
         </nav>
+        <p className="footer-privacy">{t.footer.privacy}</p>
       </div>
     </footer>
   );
